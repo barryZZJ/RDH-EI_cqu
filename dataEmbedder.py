@@ -26,7 +26,6 @@ class DataEmbedder:
         else:
             self.aes = None
 
-        print("test")
 
     def save_config(self, config: str = EMBED_CONFIG_PATH):
         """
