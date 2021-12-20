@@ -54,6 +54,12 @@ def divide(seg: List[bytes]) -> BitStream:
     """把加密后的段e分解成密文字节流c，即segment函数的逆过程，用于输入解密器（或嵌入信息）"""
     pass
 
+# TODO
+def bitstream_to_img(bitstream: BitStream) -> Image.Image:
+    """输入密文字节流c，计算对应像素值，重构图片，即img_to_bitstream的逆过程，因此需要反向实现其中的各个函数。"""
+    pass
+
+
 if __name__ == '__main__':
     # 测试用
     block = Image.open(PIC_8_PATH)
