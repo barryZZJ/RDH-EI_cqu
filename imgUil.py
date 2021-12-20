@@ -8,6 +8,6 @@ def save_img(img: bytes, filepath: str):
     pass
 
 
-def showImg(img: bytes):
+def show_img(img: bytes):
     """方便debug，根据字节流直接转化为图片并显示（可用PIL库实现）"""
     pass
