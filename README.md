@@ -5,9 +5,9 @@
 > 本项目使用虚拟环境，安装在venv目录下，方便所有人同步需要的第三方库，而且不污染本地python环境，不使用时直接删除venv文件夹即可完全删除。
 1. 运行`生成虚拟环境.bat`
 2. 运行`安装依赖包.bat`
-    > 目前主要安装Crypto (加解密)、PyQt5 (GUI)，需要新的包通知我，会再更新。
+    > 目前主要安装 Pillow (图片处理)、Crypto (加解密，windows中为pycryptodome)、PyQt5 (GUI)，需要新的包通知我，会再更新。
 3. 在IDE（如Pycharm）中配置python解释器为`venv\Scripts\python.exe`
-
+4. 如需在命令行中使用，运行根目录下的`activate.bat`，或输入`venv\Scripts\activate.bat`
 
 # 任务
 
