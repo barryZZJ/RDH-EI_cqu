@@ -26,6 +26,7 @@ class DataEmbedder:
         else:
             self.aes = None
 
+
     def save_config(self, config: str = EMBED_CONFIG_PATH):
         """
         保存key到配置文件中
