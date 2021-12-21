@@ -7,6 +7,7 @@ from consts import *
 from aesutil import AESUtil
 from imgUil import segment_every
 
+DEBUG = True
 #! 测试数据使用consts.py中的常量，有改动在consts.py中修改
 class DataEmbedder:
     """信息嵌入提取相关操作"""
@@ -22,15 +23,19 @@ class DataEmbedder:
         :param aesconfig: 加解密相关配置文件路径字符串
         """
         # 参考代码
-        if config:
-            self.key = self.read_config(config)
+        if DEBUG:
+            self.key = EMBED_KEY_DEBUG
         else:
-            self.key = self.rand_init()
+            if config:
+                self.key = self.read_config(config)
+            else:
+                self.key = self.rand_init()
 
         if aesconfig:
             self.aes = AESUtil(aesconfig)
         else:
             self.aes = None
+
 
 
     def save_config(self, config: str = EMBED_CONFIG_PATH):
