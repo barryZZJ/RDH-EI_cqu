@@ -15,11 +15,17 @@ def img_to_bitstream(filepath: str) -> BitStream:
     bitstream = join(list_of_bitplanes)  # 把列表合并成比特流
     return bitstream
 
-# TODO
 def _to_blocks(img: Image.Image) -> List[Image.Image]:
     """把图片拆分成K个块 (Oi, 64个像素)，并作为列表返回"""
     # 可使用Image.Image的crop方法
-    pass
+    # 分成N*M个块
+    M = img.width / 8
+    N = img.height / 8
+    blocks = []
+    for n in (0, N):
+        for m in (0, M):
+            blocks.append(img.crop(n*8, m*8, n*8+7, m*8+7))
+    return blocks
 
 def _block_to_bitplanes(block: Image.Image) -> BitStream:
     """
@@ -48,7 +54,6 @@ def _block_to_bitplanes(block: Image.Image) -> BitStream:
     bitplanes = join(bitplanes)  # 把列表合并成比特流
     return bitplanes
 
-# TODO
 def segment_every(bitstream: BitStream, bits: int) -> List[BitStream]:
     """
     比特流b，每bits个比特为一组，组成一个列表。
@@ -57,7 +62,10 @@ def segment_every(bitstream: BitStream, bits: int) -> List[BitStream]:
 
     注：加密器使用该输出时，可以通过列表里每个BitStream对象的bytes成员(如bitstream.bytes)把BitStream对象转换为字节。
     """
-    pass
+    list_of_bitplanes = []
+    for k in range(bitstream.len/bits):
+        list_of_bitplanes.append(bitstream[k, (k+1)*bits -1 ])
+    return list_of_bitplanes
 
 def join(seg: List[BitStream]) -> BitStream:
     """
