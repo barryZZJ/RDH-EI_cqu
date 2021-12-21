@@ -43,6 +43,9 @@ class AESUtil:
         """对明文字节流m加密，返回密文字节流"""
         pass
 
-    def decrypt(self, c: bytes) -> bytes:
-        """对密文字节流c解密，返回明文字节流"""
+    def decrypt(self, c: bytes, iv=None) -> bytes:
+        """
+        对密文字节流c解密，返回明文字节流
+        其他模块解密需要动态修改iv，因此提取为参数，默认使用self.iv即可
+        """
         pass
