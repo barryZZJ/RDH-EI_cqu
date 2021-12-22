@@ -90,13 +90,34 @@ def bitstream_to_img(bitstream: BitStream) -> Image.Image:
 # TODO
 def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
     """把512bit的位平面列表bitplanes (论文中bi) 重构为一个块 (Oi, 64个像素)"""
-    pass
+    #把bit流，分为8*64记录每个像素的内容
+    list_of_pixels = segment_every(bitplanes, 8)
+    img = []
+    x = 0
+    y = 0
+    for pixel in list_of_pixels:
+        img[x, y] = pixel.int
+        y = y +1
+        if (y == 8) :
+            x = x+1
+            y = 0
+    return Image.fromarray(img)
 
 # TODO
 def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
     """把图片分块合并成一个完整的图片，注意返回的是Image对象"""
     # 可使用Image.Image的paste方法
-    pass
+    N = len(blocks) ** 0.5
+    to_image = Image.new('RGB', (N*8, N*8))
+    x = 0
+    y = 0
+    for block in range(blocks):
+        to_image.paste(block, x*8, y*8)
+        y = y +1
+        if (y == N) :
+            x = x+1
+            y = 0
+    return to_image
 
 if __name__ == '__main__':
     # 测试用
