@@ -19,12 +19,13 @@ def _to_blocks(img: Image.Image) -> List[Image.Image]:
     """把图片拆分成K个块 (Oi, 64个像素)，并作为列表返回"""
     # 可使用Image.Image的crop方法
     # 分成N*M个块
-    M = img.width / 8
-    N = img.height / 8
+    M = int(img.width / 8)
+    N = int(img.height / 8)
     blocks = []
-    for n in (0, N):
-        for m in (0, M):
-            blocks.append(img.crop(n*8, m*8, n*8+7, m*8+7))
+    for n in range(0, N):
+        for m in range(0, M):
+            box = (m*8, n*8, (m+1)*8, (n+1)*8)
+            blocks.append(img.crop(box))
     return blocks
 
 def _block_to_bitplanes(block: Image.Image) -> BitStream:
@@ -111,7 +112,7 @@ def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
     to_image = Image.new('RGB', (N*8, N*8))
     x = 0
     y = 0
-    for block in range(blocks):
+    for block in blocks:
         to_image.paste(block, x*8, y*8)
         y = y +1
         if (y == N) :
@@ -121,12 +122,31 @@ def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
 
 if __name__ == '__main__':
     # 测试用
+    #_to_blocks,将按128*128分的情况测试完成，保存在split_pic
+    """ 
+    img = Image.open(PIC_512_PATH)
+    img_blocks = _to_blocks(img)
+    n = 0
+    for img_block in img_blocks:
+        n=n+1
+        outfile = '%s/%s.jpg' % ("pics/split_pic",n)
+        img_block.save(outfile) 
+    """
+    #测试 img_to_bitstream，用小图片进行测试，与_block_to_bitplanes的结果进行对比，观察是否一样
     block = Image.open(PIC_8_PATH)
+    list_of_bitplans2 = []
     list_of_bitplanes = []  # 所有位平面列表构成的列表 (论文中b), 512*K bit。一个位平面列表是论文中的bi, 64bit * 8 = 512 bit；一个位平面是论文中的bi^(k), 64 bit。
     bitplanes = _block_to_bitplanes(block)  # 把一个块转换成bitplanes，即论文中的bi, 512 bit
     list_of_bitplanes.append(bitplanes)
+    bitplanes2 = img_to_bitstream(PIC_8_PATH)
+    list_of_bitplans2.append(bitplanes2)
     block = Image.open(PIC_8_2_PATH)
     bitplanes = _block_to_bitplanes(block)  # 把一个块转换成位平面列表(论文中bi), 512 bit
     list_of_bitplanes.append(bitplanes)
+    bitplanes2 = img_to_bitstream(PIC_8_2_PATH)
+    list_of_bitplans2.append(bitplanes2)
     bitstream = join(list_of_bitplanes)  # 把列表合并成比特流
+    bitstream2 = join(list_of_bitplans2)
     print(bitstream)
+    print(bitstream2)
+    #
