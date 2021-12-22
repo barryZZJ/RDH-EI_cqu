@@ -12,3 +12,5 @@ EMBED_KEY_DEBUG = 132  # 默认密钥
 EMBED_PARAM_W = 1
 EMBED_PARAM_U = 2
 EMBED_DATA_DEBUG = b'testtesttesttest'
+English_alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
+                    "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]

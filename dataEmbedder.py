@@ -2,7 +2,8 @@ from bitstring import BitStream
 from typing import List
 import json
 from PIL import Image
-
+import random
+import string
 from consts import *
 from aesutil import AESUtil
 from imgUil import segment_every
@@ -45,7 +46,10 @@ class DataEmbedder:
 
         :param config: 配置文件路径字符串
         """
-        pass  # pass为占位符，实现时删掉该行
+        with open(config,"a") as f:
+            f.write(self.key)
+            f.write("\r")
+        f.closed
 
     def read_config(self, config: str = EMBED_CONFIG_PATH) -> str:
         """
@@ -54,15 +58,24 @@ class DataEmbedder:
 
         :param config: 配置文件路径字符串
         """
-        pass
+        keyList = []
+        with open(config) as f:
+            for read_data in f.readlines():
+                read_data = read_data.strip('\n')
+                key = str(read_data)
+                keyList.append(key)
+        f.closed
+        listLen = len(keyList)
+        key = keyList[random.randint(0,listLen-1)]
+        return key
 
     def rand_init(self) -> str:
         """
         随机初始化key，并返回key。TODO 密钥长度是否有影响。使用EMBED_KEY_LEN
-        *yzy*
+        *yzy*  数字：string.digits  字母：string.ascii_lowercase
         """
-
-        pass
+        key = ''.join(random.choice(string.digits) for _ in range(EMBED_KEY_LEN))
+        return key
 
     def embed(self, data: bytes, img: bytes) -> bytes:
         """
@@ -132,8 +145,26 @@ class DataEmbedder:
         对要嵌入的数据用self.key加密。
         *yzy*
         """
-        # 可以用Crypto库里的现有算法。
-        pass
+        ciphertext = ""
+        message = data.lower().decode('utf-8')
+        # key = random.randint(0, 1000)
+        for i in message:
+            ciphertext += English_alphabet[(English_alphabet.index(i) + self.key) % 26]
+        ciphertext = ciphertext.encode('utf-8')
+        return ciphertext
+
+    def decrypt_data(self, data: bytes) -> bytes:
+        """
+        对要提取出的数据用self.key加密。
+        *yzy*
+        """
+        message = ""
+        ciphertext = data.decode('utf-8')
+        for i in ciphertext:
+            message += English_alphabet[(English_alphabet.index(i) - self.key) % 26]
+        message = message.lower().encode('utf-8')
+        return message
+
 
     def sub_LSB(self, img: BitStream, sub: BitStream) -> BitStream:
         """
