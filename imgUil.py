@@ -1,4 +1,5 @@
 from typing import List
+import numpy
 from PIL import Image
 from bitstring import BitStream
 from consts import *
@@ -24,7 +25,7 @@ def _to_blocks(img: Image.Image) -> List[Image.Image]:
     blocks = []
     for n in range(0, N):
         for m in range(0, M):
-            box = (m*8, n*8, (m+1)*8, (n+1)*8)
+            box = (n*8, m*8, (n+1)*8, (m+1)*8)
             blocks.append(img.crop(box))
     return blocks
 
@@ -64,8 +65,8 @@ def segment_every(bitstream: BitStream, bits: int) -> List[BitStream]:
     注：加密器使用该输出时，可以通过列表里每个BitStream对象的bytes成员(如bitstream.bytes)把BitStream对象转换为字节。
     """
     list_of_bitplanes = []
-    for k in range(bitstream.len/bits):
-        list_of_bitplanes.append(bitstream[k, (k+1)*bits -1 ])
+    for k in range(0,int(len(bitstream)/bits)):
+        list_of_bitplanes.append(bitstream[k*bits:((k+1)*bits) ])
     return list_of_bitplanes
 
 def join(seg: List[BitStream]) -> BitStream:
@@ -88,32 +89,33 @@ def bitstream_to_img(bitstream: BitStream) -> Image.Image:
     #! 如果有需要可以添加保存到本地的函数
     return img
 
-# TODO
 def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
     """把512bit的位平面列表bitplanes (论文中bi) 重构为一个块 (Oi, 64个像素)"""
     #把bit流，分为8*64记录每个像素的内容
     list_of_pixels = segment_every(bitplanes, 8)
-    img = []
+    img = [[0]*8]*8
     x = 0
     y = 0
     for pixel in list_of_pixels:
-        img[x, y] = pixel.int
-        y = y +1
+        img[x][y] = pixel.uint
+        y = y + 1
         if (y == 8) :
             x = x+1
             y = 0
-    return Image.fromarray(img)
+    #return numpy.array(img).
+    arr = numpy.array(img)
+    return Image.fromarray(arr)
 
-# TODO
 def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
     """把图片分块合并成一个完整的图片，注意返回的是Image对象"""
     # 可使用Image.Image的paste方法
     N = len(blocks) ** 0.5
-    to_image = Image.new('RGB', (N*8, N*8))
+
+    to_image = Image.new('L', (int(N*8), int(N*8)), (255))
     x = 0
     y = 0
     for block in blocks:
-        to_image.paste(block, x*8, y*8)
+        to_image.paste(block, (x*8, y*8))
         y = y +1
         if (y == N) :
             x = x+1
@@ -149,4 +151,7 @@ if __name__ == '__main__':
     bitstream2 = join(list_of_bitplans2)
     print(bitstream)
     print(bitstream2)
-    #
+    #用pic_8_2_path图片产生的bit流来测试bitstream_to_img
+    bitplanes2 = img_to_bitstream(PIC_512_PATH)
+    pic = bitstream_to_img(bitplanes2)
+    pic.save("1.jpg")
