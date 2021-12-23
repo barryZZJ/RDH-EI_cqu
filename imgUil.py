@@ -84,6 +84,11 @@ def bitstream_to_blocks(bitstream: BitStream) -> Image.Image:
     """输入密文字节流e，计算对应像素值，解码为各个图片块，不需要拼接"""
     pass
 
+# TODO 待bitstream_to_img完善后实现。嵌入信息要用。为保留唯一性可以把bitstream_to_img的主要功能写在该函数里。
+def bitstream_to_blocks(bitstream: BitStream) -> List[Image.Image]:
+    """输入密文字节流e，计算对应像素值，解码为各个图片块，不需要拼接"""
+    pass
+
 # TODO
 def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
     """把512bit的位平面列表bitplanes (论文中bi) 重构为一个块 (Oi, 64个像素)"""
