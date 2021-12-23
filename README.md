@@ -39,3 +39,8 @@
 - 平台技术。bitstring库的BitStream类处理二进制流。
 - 算法改进。
 - 软件易用性
+
+参考文献：
+
+Qian Z, Zhang X, Ren Y, et al. Block cipher based separable reversible data hiding in encrypted images[J]. Multimedia Tools and Applications, 2016, 75(21): 13749–13763.
+
