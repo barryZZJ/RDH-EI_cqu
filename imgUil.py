@@ -1,4 +1,6 @@
 from typing import List
+import math
+import numpy as np
 from PIL import Image
 from bitstring import BitStream
 from consts import *
@@ -99,6 +101,20 @@ def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
     """把图片分块合并成一个完整的图片，注意返回的是Image对象"""
     # 可使用Image.Image的paste方法
     pass
+
+def evaluate_psnr(self, decrypted: Image.Image, original: Image.Image):
+    """
+    计算解密后的图片与原图的PSNR值，评估解密图片的效果
+    """
+    # img1 and img2 have range [0, 255]
+    img1 = np.asarray(decrypted, dtype=np.float64)
+    img2 = np.asarray(original, dtype=np.float64)
+    mse = np.mean((img1 - img2) ** 2)
+    if mse == 0:
+        return np.inf
+    PIXEL_MAX = 255.0
+    return 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
+
 
 if __name__ == '__main__':
     # 测试用
