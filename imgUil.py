@@ -102,7 +102,6 @@ def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
         if (y == 8) :
             x = x+1
             y = 0
-    #return numpy.array(img).
     arr = numpy.array(img)
     return Image.fromarray(arr)
 
@@ -154,4 +153,4 @@ if __name__ == '__main__':
     #用pic_8_2_path图片产生的bit流来测试bitstream_to_img
     bitplanes2 = img_to_bitstream(PIC_512_PATH)
     pic = bitstream_to_img(bitplanes2)
-    pic.save("2.jpg")
+    pic.save("1.jpg")
