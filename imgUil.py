@@ -93,11 +93,11 @@ def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
     """把512bit的位平面列表bitplanes (论文中bi) 重构为一个块 (Oi, 64个像素)"""
     #把bit流，分为8*64记录每个像素的内容
     list_of_pixels = segment_every(bitplanes, 8)
-    img = [[0]*8]*8
+    img = [[] for i in range(8)]
     x = 0
     y = 0
     for pixel in list_of_pixels:
-        img[x][y] = pixel.uint
+        img[x].append(pixel.uint)
         y = y + 1
         if (y == 8) :
             x = x+1
@@ -154,4 +154,4 @@ if __name__ == '__main__':
     #用pic_8_2_path图片产生的bit流来测试bitstream_to_img
     bitplanes2 = img_to_bitstream(PIC_512_PATH)
     pic = bitstream_to_img(bitplanes2)
-    pic.save("1.jpg")
+    pic.save("2.jpg")
