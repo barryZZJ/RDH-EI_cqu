@@ -1,5 +1,6 @@
 from typing import List
-import numpy
+import math
+import numpy as np
 from PIL import Image
 from bitstring import BitStream
 from consts import *
@@ -89,6 +90,16 @@ def bitstream_to_img(bitstream: BitStream) -> Image.Image:
     #! 如果有需要可以添加保存到本地的函数
     return img
 
+# TODO 待bitstream_to_img完善后实现。嵌入信息要用。为保留唯一性可以把bitstream_to_img的主要功能写在该函数里。
+def bitstream_to_blocks(bitstream: BitStream) -> Image.Image:
+    """输入密文字节流e，计算对应像素值，解码为各个图片块，不需要拼接"""
+    pass
+
+# TODO 待bitstream_to_img完善后实现。嵌入信息要用。为保留唯一性可以把bitstream_to_img的主要功能写在该函数里。
+def bitstream_to_blocks(bitstream: BitStream) -> List[Image.Image]:
+    """输入密文字节流e，计算对应像素值，解码为各个图片块，不需要拼接"""
+    pass
+
 def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
     """把512bit的位平面列表bitplanes (论文中bi) 重构为一个块 (Oi, 64个像素)"""
     #把bit流，分为8*64记录每个像素的内容
@@ -102,8 +113,7 @@ def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
         if (y == 8) :
             x = x+1
             y = 0
-    #return numpy.array(img).
-    arr = numpy.array(img)
+    arr = np.array(img)
     return Image.fromarray(arr)
 
 def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
@@ -121,6 +131,20 @@ def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
             x = x+1
             y = 0
     return to_image
+
+def evaluate_psnr(self, decrypted: Image.Image, original: Image.Image):
+    """
+    计算解密后的图片与原图的PSNR值，评估解密图片的效果
+    """
+    # img1 and img2 have range [0, 255]
+    img1 = np.asarray(decrypted, dtype=np.float64)
+    img2 = np.asarray(original, dtype=np.float64)
+    mse = np.mean((img1 - img2) ** 2)
+    if mse == 0:
+        return np.inf
+    PIXEL_MAX = 255.0
+    return 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
+
 
 if __name__ == '__main__':
     # 测试用
