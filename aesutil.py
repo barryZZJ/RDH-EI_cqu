@@ -28,8 +28,8 @@ class AESUtil:
         """
         with open(config, "r", encoding="utf-8") as f:
             data = json.load(f)
-        data['decode_iv'] = self.iv
-        data['decode_key'] = self.key
+        data['iv'] = self.iv
+        data['key'] = self.key
         with open(config, "w") as f:
             json.dump(data, f, ensure_ascii=False)
     def read_config(self, config: str = AES_CONFIG_PATH):
@@ -54,10 +54,7 @@ class AESUtil:
         key=(data['key']).encode()
         iv=(data['iv']).encode()
         cipher = AES.new(key, AES.MODE_CBC, iv)
-        print(type(m))
-
-        str=bytes.decode(m)
-        msg=cipher.encrypt(str)
+        msg=cipher.encrypt(m)
         return msg
 
     def decrypt(self, c: bytes, iv: bytes = None) -> bytes:
@@ -67,18 +64,20 @@ class AESUtil:
         """
         with open(AES_CONFIG_PATH) as f:
             data = json.load(f)
-        key=data['decode_key']
-        iv=data['decode_iv']
+        key=(data['key']).encode()
         cipher = AES.new(key, AES.MODE_CBC, iv)
         msg = cipher.decrypt(c)
         return msg
 
 if __name__ == '__main__' :
-    #test = AESUtil("")
     test = AESUtil(AES_CONFIG_PATH)
-    bitplanes = imgUil.img_to_bitstream(PIC_8_PATH)
-    print(bitplanes)
-    bitplanes2 = test.encrypt(bitplanes)
-    print(bitplanes2)
-    bitplanes3 = test.decrypt(bitplanes2)
-    print(bitplanes3)
+    bitplanes = imgUil.img_to_bitstream(PIC_512_PATH)
+    #print(bitplanes)
+    bitplanes2 = test.encrypt(bitplanes.bytes)
+    #print(bitplanes2.hex())
+    iv = "1234567812345678"
+    bitplanes3 = test.decrypt(bitplanes2, iv.encode())
+    #print(bitplanes3.hex())
+    bitplanes3 = BitStream(bytes=bitplanes3)
+    pic = imgUil.bitstream_to_img(bitplanes3)
+    pic.save("2.jpg")
