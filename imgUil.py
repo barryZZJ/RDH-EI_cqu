@@ -85,6 +85,15 @@ def bitstream_to_img(bitstream: BitStream) -> Image.Image:
     #! 如果有需要可以添加保存到本地的函数
     return img
 
+<<<<<<< HEAD
+=======
+# TODO 待bitstream_to_img完善后实现。嵌入信息要用。为保留唯一性可以把bitstream_to_img的主要功能写在该函数里。
+def bitstream_to_blocks(bitstream: BitStream) -> Image.Image:
+    """输入密文字节流e，计算对应像素值，解码为各个图片块，不需要拼接"""
+    pass
+
+# TODO 待bitstream_to_img完善后实现。嵌入信息要用。为保留唯一性可以把bitstream_to_img的主要功能写在该函数里。
+>>>>>>> 8269e033024fe52b40ba0de7fba2777a5fdb9892
 def bitstream_to_blocks(bitstream: BitStream) -> List[Image.Image]:
     """输入密文字节流e，计算对应像素值，解码为各个图片块，不需要拼接"""
     list_of_bitplanes = segment_every(bitstream, 512)  # 分成K个512 bits的列表，每个元素是一个块的位平面列表
