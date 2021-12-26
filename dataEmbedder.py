@@ -211,13 +211,13 @@ class DataEmbedder:
             return rowDiff + colDiff
 
         # 把 List[List[Image.Image]] 转换为 ndarray, shape: (2**w, 8, 8*u)
-        npblocks_k = [np.concatenate(blocks, axis=1) for blocks in blocks_k]  # 每个块转换为 8, 8*u 的ndarray
-        npblocks_k = [np.expand_dims(blocks, axis=0) for blocks in npblocks_k]  # 每个块增加一维
+        npblocks_k = [np.concatenate(blocks, axis=1) for blocks in blocks_k]  # 每个块转换为(8, 8*u) 的ndarray
+        npblocks_k = [np.expand_dims(blocks, axis=0) for blocks in npblocks_k]  # 每个块增加一维，变为(1, 8, 8*u)
         npblocks_k = np.concatenate(npblocks_k, axis=0)  # shape: (2**w, 8, 8*u) 2**w个块叠加在一起
         # 计算所有2**w种情况下每组的blocks_group_diff
-        row_diffs = np.asarray([blocks_group_diff(blocks) for blocks in npblocks_k])  # shape: (2**w)
+        block_diffs = np.asarray([blocks_group_diff(blocks) for blocks in npblocks_k])  # shape: (2**w)
         # 求最小的那一个的下标
-        min_ind = np.argmin(row_diffs)
+        min_ind = np.argmin(block_diffs)
         return min_ind
 
 
