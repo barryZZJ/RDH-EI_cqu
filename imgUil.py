@@ -21,8 +21,8 @@ def _to_blocks(img: Image.Image) -> List[Image.Image]:
     """把图片拆分成K个块 (Oi, 64个像素)，并作为列表返回"""
     # 可使用Image.Image的crop方法
     # 分成N*M个块
-    M = int(img.width / 8)
-    N = int(img.height / 8)
+    M = img.width // 8
+    N = img.height // 8
     blocks = []
     for n in range(0, N):
         for m in range(0, M):
@@ -67,7 +67,7 @@ def segment_every(bitstream: BitStream, bits: int) -> List[BitStream]:
     """
     list_of_bitplanes = []
     for k in range(0,int(len(bitstream)/bits)):
-        list_of_bitplanes.append(bitstream[k*bits:((k+1)*bits) ])
+        list_of_bitplanes.append(bitstream[k*bits:(k+1)*bits])
     return list_of_bitplanes
 
 def join(seg: List[BitStream]) -> BitStream:
@@ -98,35 +98,24 @@ def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
     """把512bit的位平面列表bitplanes (论文中bi) 重构为一个块 (Oi, 64个像素)"""
     #把bit流，分为8*64记录每个像素的内容
     list_of_pixels = segment_every(bitplanes, 8)
-    img = [[] for i in range(8)]
-    x = 0
-    y = 0
-    for pixel in list_of_pixels:
-        img[x].append(pixel.uint)
-        y = y + 1
-        if (y == 8) :
-            x = x+1
-            y = 0
-    arr = np.array(img)
-    return Image.fromarray(arr)
+    img = np.asarray([pixel.uint for pixel in list_of_pixels])
+    img = img.reshape(8, 8)
+    img = Image.fromarray(img)
+    return img
 
 def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
     """把图片分块合并成一个完整的图片，注意返回的是Image对象"""
     # 可使用Image.Image的paste方法
-    N = len(blocks) ** 0.5
-
-    to_image = Image.new('L', (int(N*8), int(N*8)), (255))
-    x = 0
-    y = 0
-    for block in blocks:
-        to_image.paste(block, (x*8, y*8))
-        y = y +1
-        if (y == N) :
-            x = x+1
-            y = 0
+    # FIXME 目前只实现正方形图片
+    N = int(len(blocks) ** 0.5)
+    to_image = Image.new('L', (N * 8, N * 8), 255)
+    for n in range(N):
+        for m in range(N):
+            i = n * N + m
+            to_image.paste(blocks[i], (n * 8, m * 8))
     return to_image
 
-def evaluate_psnr(self, decrypted: Image.Image, original: Image.Image):
+def evaluate_psnr(decrypted: Image.Image, original: Image.Image):
     """
     计算解密后的图片与原图的PSNR值，评估解密图片的效果
     """
