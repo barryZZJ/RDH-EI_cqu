@@ -27,7 +27,7 @@ class AESUtil:
         """
         pass  # pass为占位符，实现时删掉该行
 
-    def read_config(self, config: str = AES_CONFIG_PATH) -> Tuple[str, str]:
+    def read_config(self, config: str = AES_CONFIG_PATH) -> Tuple[bytes, bytes]:
         """
         从配置文件中读取iv和key，可以考虑用JSON.load读取字典，并返回(iv, key)二元组
 
@@ -35,7 +35,7 @@ class AESUtil:
         """
         pass
 
-    def rand_init(self) -> Tuple[str, str]:
+    def rand_init(self) -> Tuple[bytes, bytes]:
         """随机初始化iv和key，并返回(iv, key)二元组"""
         pass
 
@@ -43,7 +43,7 @@ class AESUtil:
         """对明文字节流m加密，返回密文字节流"""
         pass
 
-    def decrypt(self, c: bytes, iv=None) -> bytes:
+    def decrypt(self, c: bytes, iv: bytes = None) -> bytes:
         """
         对密文字节流c解密，返回明文字节流
         其他模块解密需要动态修改iv，因此提取为参数，默认使用self.iv即可
