@@ -7,7 +7,7 @@ from PIL import Image
 from consts import *
 from aesutil import AESUtil
 from imgUil import segment_every, join, bitstream_to_blocks, _from_blocks
-
+#TODO 添加可嵌入量接口
 DEBUG = True
 #! 测试数据使用consts.py中的常量，有改动在consts.py中修改
 class DataEmbedder:
