@@ -7,10 +7,8 @@ PIC_8_2_PATH = "pics/lena8_2.bmp"  # 测试用图片路径, 8x8
 
 
 PIC_16_PATH = "pics/lena16.bmp"  # 嵌入信息测试用图片，16x16
-EMBED_KEY_LEN = 8  # 嵌入密钥长度
-EMBED_KEY_DEBUG = 132  # 默认密钥
+EMBED_KEY_LEN = 16  # 嵌入密钥长度
+EMBED_KEY_DEBUG = bytes.fromhex('a9ed88811c8a7864283fde603abd5132')  # 默认密钥
 EMBED_PARAM_W = 1
 EMBED_PARAM_U = 2
 EMBED_DATA_DEBUG = b'testtesttesttest'
-English_alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
-                    "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]

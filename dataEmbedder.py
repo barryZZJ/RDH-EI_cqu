@@ -3,11 +3,10 @@ from typing import List
 import json
 from PIL import Image
 import random
-import string
 from consts import *
 from aesutil import AESUtil
 from imgUil import segment_every
-
+from Crypto.Cipher import AES
 DEBUG = True
 #! 测试数据使用consts.py中的常量，有改动在consts.py中修改
 class DataEmbedder:
@@ -46,10 +45,11 @@ class DataEmbedder:
 
         :param config: 配置文件路径字符串
         """
-        with open(config,"a") as f:
+        with open(config, 'wb') as f:
             f.write(self.key)
-            f.write("\r")
-        f.closed
+
+        return
+
 
     def read_config(self, config: str = EMBED_CONFIG_PATH) -> str:
         """
@@ -58,15 +58,8 @@ class DataEmbedder:
 
         :param config: 配置文件路径字符串
         """
-        keyList = []
-        with open(config) as f:
-            for read_data in f.readlines():
-                read_data = read_data.strip('\n')
-                key = str(read_data)
-                keyList.append(key)
-        f.closed
-        listLen = len(keyList)
-        key = keyList[random.randint(0,listLen-1)]
+        with open(config, 'rb') as f:
+            key = f.read()
         return key
 
     def rand_init(self) -> str:
@@ -74,7 +67,7 @@ class DataEmbedder:
         随机初始化key，并返回key。TODO 密钥长度是否有影响。使用EMBED_KEY_LEN
         *yzy*  数字：string.digits  字母：string.ascii_lowercase
         """
-        key = ''.join(random.choice(string.digits) for _ in range(EMBED_KEY_LEN))
+        key = random.randbytes(EMBED_KEY_LEN)
         return key
 
     def embed(self, data: bytes, img: bytes) -> bytes:
@@ -145,24 +138,21 @@ class DataEmbedder:
         对要嵌入的数据用self.key加密。
         *yzy*
         """
-        ciphertext = ""
-        message = data.lower().decode('utf-8')
-        # key = random.randint(0, 1000)
-        for i in message:
-            ciphertext += English_alphabet[(English_alphabet.index(i) + self.key) % 26]
-        ciphertext = ciphertext.encode('utf-8')
+        aes = AES.new(self.key, AES.MODE_ECB)
+        data = data.decode('utf8')
+        while len(data) % 16!=0:
+            data += '\0'
+        ciphertext = aes.encrypt(data.encode('utf8'))
         return ciphertext
 
     def decrypt_data(self, data: bytes) -> bytes:
         """
-        对要提取出的数据用self.key加密。
+        对要提取出的数据用self.key解密。
         *yzy*
         """
-        message = ""
-        ciphertext = data.decode('utf-8')
-        for i in ciphertext:
-            message += English_alphabet[(English_alphabet.index(i) - self.key) % 26]
-        message = message.lower().encode('utf-8')
+        aes = AES.new(self.key, AES.MODE_ECB)
+        message = aes.decrypt(data)
+        message = message.strip(chr(0).encode())
         return message
 
 
