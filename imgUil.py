@@ -44,7 +44,6 @@ def _block_to_bitplanes(block: Image.Image) -> BitStream:
             # x=0~width, y=0~height
             pixel = px[x,y]
             pixels.append(BitStream(uint=pixel, length=8))  # 8位无符号整数
-
     # 生成bitplanes，即论文中的向量组bi，64bit * 8 = 512 bit
     bitplanes = []
     for k in range(-1, -8-1, -1):
@@ -97,7 +96,11 @@ def bitstream_to_blocks(bitstream: BitStream) -> List[Image.Image]:
 def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
     """把512bit的位平面列表bitplanes (论文中bi) 重构为一个块 (Oi, 64个像素)"""
     #把bit流，分为8*64记录每个像素的内容
-    list_of_pixels = segment_every(bitplanes, 8)
+    bitplanes2=BitStream()
+    for x in range(0,64):
+        for y in range(0,8):
+            bitplanes2 += BitStream(bool=bitplanes[x+64*(7-y)])
+    list_of_pixels = segment_every(bitplanes2, 8)
     img = np.asarray([pixel.uint for pixel in list_of_pixels])
     img = img.reshape(8, 8)
     img = Image.fromarray(img)
