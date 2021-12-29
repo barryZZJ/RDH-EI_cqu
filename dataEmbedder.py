@@ -6,13 +6,15 @@ from PIL import Image
 from consts import *
 from aesutil import AESUtil
 from imgUil import segment_every
+from imgUil import img_to_bitstream
+import  numpy as np
 
 DEBUG = True
 #! 测试数据使用consts.py中的常量，有改动在consts.py中修改
 class DataEmbedder:
     """信息嵌入提取相关操作"""
 
-    def __init__(self, config: str = EMBED_CONFIG_PATH, aesconfig: str = AES_CONFIG_PATH):
+    def __init__(self, config: str = None, aesconfig: str = None):
         """
         如果config不为空则从配置文件初始化self.key，
         否则随机初始化self.key。
@@ -21,7 +23,7 @@ class DataEmbedder:
 
         :param config: 配置文件路径字符串
         :param aesconfig: 加解密相关配置文件路径字符串
-        """
+
         # 参考代码
         if DEBUG:
             self.key = EMBED_KEY_DEBUG
@@ -35,7 +37,7 @@ class DataEmbedder:
             self.aes = AESUtil(aesconfig)
         else:
             self.aes = None
-
+        """
 
 
     def save_config(self, config: str = EMBED_CONFIG_PATH):
@@ -97,7 +99,11 @@ class DataEmbedder:
 
         *zt*
         """
-        pass
+        # 每一个块是8*8*8=512bit，经过图片转换成字节流，每个块的前64bit就是每块的LSB
+        lsbs = [] #全部块的LSB列表
+        for k in range(0,int(len(img)/512)):
+            lsbs.append(img[k*512:k*512+64])
+        return lsbs
 
     def shuffle(self, blocks_of_LSB: List[BitStream]) -> List[BitStream]:
         """
@@ -107,7 +113,18 @@ class DataEmbedder:
 
         *zt*
         """
-        pass
+        #使用self.key作为种子设置random,然后生成一个K长度的随机数列
+        np.random.seed(int.from_bytes(self.key,byteorder='big',signed=False)%(2**32-1))
+        #测试用np.random.seed((int.from_bytes(EMBED_KEY_DEBUG, byteorder='big', signed=False))%(2**32-1))
+        rlist=np.random.permutation(len(blocks_of_LSB))
+        #然后按照随机数列给原数列打乱
+        new_blocks_of_LSB=[]
+        for i in range(0,len(blocks_of_LSB)):
+            new_blocks_of_LSB.append(blocks_of_LSB[rlist[i]])
+        return new_blocks_of_LSB
+
+
+
 
     def reverse_shuffle(self, blocks_of_LSB: List[BitStream]) -> List[BitStream]:
         """
@@ -117,7 +134,18 @@ class DataEmbedder:
 
         *zt*
         """
-        pass
+        #使用self.key作为种子设置random,然后生成一个K长度的随机数列，再把这个数列的逆数列求出来
+        np.random.seed(int.from_bytes(self.key,byteorder='big',signed=False)%(2**32-1))
+        # 测试用np.random.seed((int.from_bytes(EMBED_KEY_DEBUG, byteorder='big', signed=False)) % (2 ** 32 - 1))
+        rlist = np.random.permutation(len(blocks_of_LSB))
+        rrlist=[0]*len(blocks_of_LSB)
+        for i in range(0,len(blocks_of_LSB)):
+            rrlist[rlist[i]]=i
+        #然后按照逆随机数列把打乱数列还原
+        new_blocks_of_LSB = []
+        for i in range(0, len(blocks_of_LSB)):
+            new_blocks_of_LSB.append(blocks_of_LSB[rrlist[i]])
+        return new_blocks_of_LSB
 
     def gen_matrix(self):
         """
@@ -157,6 +185,17 @@ class DataEmbedder:
         pass
 
 
-
+if __name__ == '__main__':
+    #测试用
+    """
+    img=img_to_bitstream(PIC_16_PATH)
+    test=DataEmbedder()
+    list=test.extract_LSB(img)
+    print(list)
+    list1=test.shuffle(list)
+    print(list1)
+    list2=test.reverse_shuffle(list1)
+    print(list2)
+    """
 
 
