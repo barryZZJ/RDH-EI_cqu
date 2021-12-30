@@ -46,13 +46,8 @@ class DataEmbedder:
         with open(config, 'wb') as f:
             f.write(self.key)
 
-<<<<<<< Updated upstream
+
     def read_config(self, config: str = EMBED_CONFIG_PATH) -> bytes:
-=======
-
-
-    def read_config(self, config: str = EMBED_CONFIG_PATH) -> str:
->>>>>>> Stashed changes
         """
         从配置文件中读取key，并返回key
         *yzy*
