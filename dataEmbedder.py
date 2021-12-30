@@ -1,7 +1,6 @@
 import secrets
 from bitstring import BitStream
 from typing import List
-import json
 from PIL import Image
 from consts import *
 from aesutil import AESUtil
@@ -60,10 +59,10 @@ class DataEmbedder:
 
     def rand_init(self) -> bytes:
         """
-        随机初始化key，并返回key。TODO 密钥长度是否有影响。使用EMBED_KEY_LEN
+        随机初始化key，并返回key。
         *yzy*
         """
-        key = secrets.token_bytes(16)
+        key = secrets.token_bytes(EMBED_KEY_LEN)
         return key
 
     def embed(self, data: bytes, img: bytes) -> bytes:
