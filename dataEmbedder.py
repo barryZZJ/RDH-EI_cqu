@@ -1,8 +1,8 @@
+import secrets
 from bitstring import BitStream
 from typing import List
 import json
 from PIL import Image
-import random
 from consts import *
 from aesutil import AESUtil
 from imgUil import segment_every
@@ -36,8 +36,6 @@ class DataEmbedder:
         else:
             self.aes = None
 
-
-
     def save_config(self, config: str = EMBED_CONFIG_PATH):
         """
         保存key到配置文件中
@@ -48,10 +46,7 @@ class DataEmbedder:
         with open(config, 'wb') as f:
             f.write(self.key)
 
-        return
-
-
-    def read_config(self, config: str = EMBED_CONFIG_PATH) -> str:
+    def read_config(self, config: str = EMBED_CONFIG_PATH) -> bytes:
         """
         从配置文件中读取key，并返回key
         *yzy*
@@ -62,12 +57,12 @@ class DataEmbedder:
             key = f.read()
         return key
 
-    def rand_init(self) -> str:
+    def rand_init(self) -> bytes:
         """
         随机初始化key，并返回key。TODO 密钥长度是否有影响。使用EMBED_KEY_LEN
-        *yzy*  数字：string.digits  字母：string.ascii_lowercase
+        *yzy*
         """
-        key = random.randbytes(EMBED_KEY_LEN)
+        key = secrets.token_bytes(16)
         return key
 
     def embed(self, data: bytes, img: bytes) -> bytes:
@@ -139,10 +134,10 @@ class DataEmbedder:
         *yzy*
         """
         aes = AES.new(self.key, AES.MODE_ECB)
-        data = data.decode('utf8')
-        while len(data) % 16!=0:
-            data += '\0'
-        ciphertext = aes.encrypt(data.encode('utf8'))
+        if len(data) % 16 != 0:
+            # 填充至16字节的倍数
+            data += b'\0' * (16 - len(data) % 16)
+        ciphertext = aes.encrypt(data)
         return ciphertext
 
     def decrypt_data(self, data: bytes) -> bytes:
@@ -152,7 +147,7 @@ class DataEmbedder:
         """
         aes = AES.new(self.key, AES.MODE_ECB)
         message = aes.decrypt(data)
-        message = message.strip(chr(0).encode())
+        message = message.rstrip(b'\0')
         return message
 
 
