@@ -1,56 +1,66 @@
-import base64
-import imgUil
+from typing import Tuple
 from bitstring import BitStream
-import json
 from consts import *
 from Crypto.Cipher import AES
 import random
+import imgUil
 
 class AESUtil:
     __BLOCK_SIZE_16 = BLOCK_SIZE_16 = AES.block_size
     """加密解密相关操作"""
-    def __init__(self, config: str):
+    def __init__(self, config: str = None):
         """
         如果config不为空则从配置文件初始化self.iv和self.key，
         否则随机初始化self.iv和self.key。
         :param config: 配置文件路径字符串
         """
         if config:
-            self.iv, self.key = self.read_config(config)
+            self.iv, self.key = self._read_config(config)
         else:
-            self.iv, self.key = self.rand_init()
+            self.iv, self.key = self._rand_init()
+
     def save_config(self, config: str = AES_CONFIG_PATH):
         """
-        保存iv和key到配置文件中，可以考虑构建字典然后JSON.dump，则配置文件后缀名为.json
+        保存iv和key到配置文件中
         :param config: 配置文件路径字符串
         """
-        data = {}
-        data['iv'] = self.iv
-        data['key'] = self.key
-        with open(config, "w") as f:
-            json.dump(data, f, ensure_ascii=False)
-    def read_config(self, config: str = AES_CONFIG_PATH):
+        with open(config, "wb") as f:
+            f.writelines([
+                self.iv,
+                b'\n',
+                self.key
+            ])
+
+    @staticmethod
+    def _read_config(self, config: str = AES_CONFIG_PATH) -> Tuple[bytes, bytes]:
         """
-        从配置文件中读取iv和key，可以考虑用JSON.load读取字典
+        从配置文件中读取iv和key
         :param config: 配置文件路径字符串
         """
-        with open(config,"r") as f:
-            data = json.load(f)
-        return data['iv'], data['key']
-    def rand_init(self) :
+        with open(config, "rb") as f:
+            iv, key = f.read().splitlines()
+        return iv, key
+
+    def load_config(self, config: str = AES_CONFIG_PATH):
+        """
+        从配置文件中读取iv和key并加载为成员属性。
+        """
+        self.iv, self.key = self._read_config(config)
+
+    @staticmethod
+    def _rand_init() -> Tuple[bytes, bytes]:
         """随机初始化iv和key"""
-        str = ''
-        iv = str.join(random.choice("0123456789") for i in range(16))
-        key = str.join(random.choice("0123456789") for i in range(16))
+        iv = random.randbytes(16)
+        key = random.randbytes(16)
         return iv, key
 
     def encrypt(self, m: bytes) -> bytes:
         """对明文字节流m加密，返回密文字节流"""
 
-        key=(self.key).encode()
-        iv=(self.iv).encode()
+        iv = self.iv
+        key = self.key
         cipher = AES.new(key, AES.MODE_CBC, iv)
-        msg=cipher.encrypt(m)
+        msg = cipher.encrypt(m)
         return msg
 
     def decrypt(self, c: bytes, iv: bytes = None) -> bytes:
@@ -60,20 +70,20 @@ class AESUtil:
         """
         if not iv:
             iv = self.iv
-        key=(self.key).encode()
+        key = self.key
         cipher = AES.new(key, AES.MODE_CBC, iv)
         msg = cipher.decrypt(c)
         return msg
 
 if __name__ == '__main__' :
-    test = AESUtil(AES_CONFIG_PATH)
+    test = AESUtil()
     bitplanes = imgUil.img_to_bitstream(PIC_512_PATH)
     #print(bitplanes)
     bitplanes2 = test.encrypt(bitplanes.bytes)
     #print(bitplanes2.hex())
-    iv = "1234567812345678"
-    bitplanes3 = test.decrypt(bitplanes2, iv.encode())
+    iv = test.iv
+    bitplanes3 = test.decrypt(bitplanes2)
     #print(bitplanes3.hex())
     bitplanes3 = BitStream(bytes=bitplanes3)
     pic = imgUil.bitstream_to_img(bitplanes3)
-    pic.save("2.jpg")
+    pic.show()
