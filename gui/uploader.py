@@ -11,11 +11,14 @@ import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 
+key = 'test'
+pic = None
+encode_pic = None
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
         self.cwd = os.getcwd()  # 获取当前程序文件位置
-
         Form.setObjectName("Form")
         Form.resize(400, 207)
         font = QtGui.QFont()
@@ -72,7 +75,7 @@ class Ui_Form(object):
         self.gridLayout_2.addWidget(self.pushButton_5, 2, 2, 1, 1)
         self.label_6 = QtWidgets.QLabel(self.groupBox)
         self.label_6.setObjectName("label_6")
-        self.gridLayout_2.addWidget(self.label_6, 2, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.label_6, 2, 0, 1, 1)
         self.pushButton_6 = QtWidgets.QPushButton(self.groupBox)
         self.pushButton_6.setObjectName("pushButton_6")
         self.gridLayout_2.addWidget(self.pushButton_6, 0, 2, 1, 1)
@@ -82,8 +85,8 @@ class Ui_Form(object):
         self.pushButton_2.clicked.connect(self.choose_path_save_key)
         self.pushButton_4.clicked.connect(self.save_key)
         self.pushButton_6.clicked.connect(self.choose_path_load_key)
-        self.pushButton_3.clicked.connect(self.choose_path_pic)
-        self.pushButton_5.clicked.connect(self.encrypt_save)
+        self.pushButton_3.clicked.connect(self.choose_path_load_pic)
+        self.pushButton_5.clicked.connect(self.encrypt_save_pic)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -92,54 +95,88 @@ class Ui_Form(object):
         self.label.setText(_translate("Form", "保存临时随机密钥"))
         self.pushButton_2.setText(_translate("Form", "浏览"))  # 保存密钥路径
         self.pushButton_4.setText(_translate("Form", "保存"))  # 保存密钥
-        self.label_3.setText(_translate("Form", "保存成功/失败"))
+        self.label_3.setText(_translate("Form", ""))
         self.pushButton_3.setText(_translate("Form", "浏览"))  # 选择加密图片路径
         self.label_5.setText(_translate("Form", "加载密钥文件"))
         self.label_4.setText(_translate("Form", "选择加密图片"))
         self.pushButton_5.setText(_translate("Form", "加密并保存"))  # 加密保存图片
-        self.label_6.setText(_translate("Form", "加密成功/加密失败："))
+        self.label_6.setText(_translate("Form", ""))
         self.pushButton_6.setText(_translate("Form", "浏览"))  # 加载密钥路径
 
-        self.lineEdit.setText("")      # 密钥保存路径
-        self.lineEdit_3.setText("")    # 加密图片路径
-        self.lineEdit_2.setText("")    # 密钥加载路径
+        self.lineEdit.setText("")  # 密钥保存路径
+        self.lineEdit_3.setText("")  # 加密图片路径
+        self.lineEdit_2.setText("")  # 密钥加载路径
 
+    # 选取保存临时随机密钥的路径
     def choose_path_save_key(self):
         file_name, filetype = \
             QFileDialog.getSaveFileName(None,
                                         "文件保存",
                                         self.cwd,  # 起始路径
-                                        "All Files (*);;Text Files (*.txt)")
-
-        if file_name == "":
+                                        "Text Files (*.txt);;All Files (*)")
+        if file_name == "":  # 空路径
             return
         else:
+            # 将选中路径同步到LineEdit上
             self.lineEdit.setText(file_name)
             return
 
-
+    # 保存启动时生成的随机密钥
     def save_key(self):
         save_path = self.lineEdit.text()
-
+        f = open(save_path, 'w')
+        if key is not None:
+            f.write(key)
+            self.label_3.setText("保存成功")
+        else:
+            self.label_3.setText("保存失败")
+        f.close()
         return
 
+    # 选取加密密钥文件的路径
     def choose_path_load_key(self):
         file_name, filetype = \
             QFileDialog.getOpenFileName(None,
                                         "选取文件",
                                         self.cwd,  # 起始路径
                                         "Text Files (*.txt);;All Files (*)")
-
-        if file_name == "":
+        if file_name == "":  # 空路径
             return
         else:
+            # 将选中路径同步到LineEdit上
             self.lineEdit_2.setText(file_name)
             return
 
+    # 选择被加密图片所在路径
+    def choose_path_load_pic(self):
+        file_name, filetype = \
+            QFileDialog.getOpenFileName(None,
+                                        "选取文件",
+                                        self.cwd,  # 起始路径
+                                        "Text Files (*.txt);;All Files (*)")
+        if file_name == "":  # 空路径
+            return
+        else:
+            # 将选中路径同步到LineEdit上
+            self.lineEdit_3.setText(file_name)
+            return
 
-    def choose_path_pic(self):
-        pass
+    # 保存已加密图片
+    def encrypt_save_pic(self):
+        if encode_pic is not None:
 
-    def encrypt_save(self):
-        pass
+            self.label_6.setText("加密成功")
+        else:
+            self.label_6.setText("加密失败")
+        return
 
+
+if __name__ == "__main__":
+    import sys
+
+    app = QtWidgets.QApplication(sys.argv)
+    Dialog = QtWidgets.QDialog()
+    ui = Ui_Form()
+    ui.setupUi(Dialog)
+    Dialog.show()
+    sys.exit(app.exec_())
