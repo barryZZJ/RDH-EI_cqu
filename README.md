@@ -38,4 +38,13 @@
 - 基本功能
 - 平台技术。bitstring库的BitStream类处理二进制流。
 - 算法改进。
+  - [ ] 图片编码使用pillow遍历像素效率太低，转为numpy数组再进行处理。
+  - [ ] GUI一次处理多张图片。
+  - [ ] 实现对彩色图片的处理
+
 - 软件易用性
+
+参考文献：
+
+Qian Z, Zhang X, Ren Y, et al. Block cipher based separable reversible data hiding in encrypted images[J]. Multimedia Tools and Applications, 2016, 75(21): 13749–13763.
+
