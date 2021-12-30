@@ -135,7 +135,7 @@ class DataEmbedder:
 
     def encrypt_data(self, data: bytes) -> bytes:
         """
-        对要嵌入的数据用self.key加密。
+        对要嵌入的数据用self.key加密，且输入长度与输出长度相同。
         *yzy*
         """
         aes = AES.new(self.key, AES.MODE_ECB)
