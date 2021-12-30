@@ -7,8 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>407</width>
-    <height>300</height>
+    <height>238</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Microsoft YaHei UI</family>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -16,52 +21,48 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QGroupBox" name="groupBox_2">
+     <property name="font">
+      <font>
+       <family>Microsoft YaHei UI</family>
+      </font>
+     </property>
      <property name="title">
       <string/>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="0" colspan="2">
+      <item row="0" column="3">
+       <widget class="QPushButton" name="pushButton_2">
+        <property name="text">
+         <string>浏览</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
        <widget class="QLabel" name="label_3">
+        <property name="font">
+         <font>
+          <family>Microsoft Uighur</family>
+         </font>
+        </property>
         <property name="text">
          <string>保存成功/失败</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="3">
+      <item row="1" column="3">
        <widget class="QPushButton" name="pushButton_4">
         <property name="text">
          <string>保存</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="lineEdit"/>
+      </item>
+      <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
          <string>保存临时随机密钥</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="QPushButton" name="pushButton">
-        <property name="text">
-         <string>随机生成临时密钥</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="lineEdit"/>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>生成完成/生成失败</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QPushButton" name="pushButton_2">
-        <property name="text">
-         <string>浏览</string>
         </property>
        </widget>
       </item>
@@ -70,18 +71,43 @@
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
+     <property name="font">
+      <font>
+       <family>Microsoft YaHei UI</family>
+      </font>
+     </property>
      <property name="title">
       <string/>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="2">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="lineEdit_2"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>加载密钥文件</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
        <widget class="QPushButton" name="pushButton_6">
         <property name="text">
          <string>浏览</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>加载嵌入文本</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="lineEdit_3"/>
+      </item>
+      <item row="3" column="2">
        <widget class="QPushButton" name="pushButton_5">
         <property name="text">
          <string>嵌入并保存</string>
@@ -89,36 +115,33 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="lineEdit_2"/>
+       <widget class="QLineEdit" name="lineEdit_4"/>
       </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="lineEdit_3"/>
+      <item row="3" column="1">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>嵌入成功/嵌入失败：嵌入文件过大（）</string>
+        </property>
+       </widget>
       </item>
-      <item row="1" column="2">
+      <item row="2" column="2">
        <widget class="QPushButton" name="pushButton_3">
         <property name="text">
          <string>浏览</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>加载嵌入文本</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>选择嵌入图片</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="label_6">
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pushButton_7">
         <property name="text">
-         <string>嵌入成功/嵌入失败：嵌入文件过大（）</string>
+         <string>浏览</string>
         </property>
        </widget>
       </item>
