@@ -8,6 +8,8 @@ from consts import *
 def img_to_bitstream(filepath: str) -> BitStream:
     """输入图片路径，返回编码后的字节流，即论文中的b"""
     img = Image.open(filepath)  # type: Image.Image  # 用PIL打开图片，得到Image对象
+    # FIXME 目前只支持灰度图
+    img = img.convert(mode="L")
     blocks = _to_blocks(img)  # type: List[Image.Image]  # 分成K个8x8的块 (论文中Oi)
     list_of_bitplanes = []  # 所有位平面列表构成的列表 (论文中b), 512*K bit。一个位平面列表是论文中的bi, 64bit * 8 = 512 bit；一个位平面是论文中的bi^(k), 64 bit。
     for block in blocks:
@@ -111,7 +113,8 @@ def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
     # 可使用Image.Image的paste方法
     # FIXME 目前只实现正方形图片
     N = int(len(blocks) ** 0.5)
-    to_image = Image.new('L', (N * 8, N * 8), 255)
+    # FIXME 目前只支持灰度图
+    to_image = Image.new('L', (N * 8, N * 8))
     for n in range(N):
         for m in range(N):
             i = n * N + m
