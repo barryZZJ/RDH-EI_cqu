@@ -13,7 +13,7 @@ DEBUG = True
 class DataEmbedder:
     """信息嵌入提取相关操作"""
 
-    def __init__(self, config: str = EMBED_CONFIG_PATH, aesconfig: str = AES_CONFIG_PATH):
+    def __init__(self, config: str = None, aesconfig: str = None):
         """
         如果config不为空则从配置文件初始化self.key，
         否则随机初始化self.key。
@@ -28,15 +28,14 @@ class DataEmbedder:
             self.key = EMBED_KEY_DEBUG
         else:
             if config:
-                self.key = self.read_config(config)
+                self.key = self._read_config(config)
             else:
-                self.key = self.rand_init()
+                self.key = self._rand_init()
 
         if aesconfig:
             self.aes = AESUtil(aesconfig)
         else:
             self.aes = None
-
 
     def save_config(self, config: str = EMBED_CONFIG_PATH):
         """
@@ -47,7 +46,8 @@ class DataEmbedder:
         """
         pass  # pass为占位符，实现时删掉该行
 
-    def read_config(self, config: str = EMBED_CONFIG_PATH) -> str:
+    @staticmethod
+    def _read_config(config: str = EMBED_CONFIG_PATH) -> bytes:
         """
         从配置文件中读取key，并返回key
         *yzy*
@@ -56,7 +56,11 @@ class DataEmbedder:
         """
         pass
 
-    def rand_init(self) -> str:
+    def load_config(self, config: str = EMBED_CONFIG_PATH):
+        self.key = self._read_config(config)
+
+    @staticmethod
+    def _rand_init() -> bytes:
         """
         随机初始化key，并返回key。TODO 密钥长度是否有影响。使用EMBED_KEY_LEN
         *yzy*
