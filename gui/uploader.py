@@ -82,11 +82,11 @@ class Ui_Form(object):
         self.verticalLayout_4.addWidget(self.groupBox)
 
         self.retranslateUi(Form)
-        self.pushButton_2.clicked.connect(self.choose_path_save_key)
+        self.pushButton_2.clicked.connect(self.path_save_key)
         self.pushButton_4.clicked.connect(self.save_key)
-        self.pushButton_6.clicked.connect(self.choose_path_load_key)
-        self.pushButton_3.clicked.connect(self.choose_path_load_pic)
-        self.pushButton_5.clicked.connect(self.encrypt_save_pic)
+        self.pushButton_6.clicked.connect(self.path_load_key)
+        self.pushButton_3.clicked.connect(self.path_load_pic)
+        self.pushButton_5.clicked.connect(self.save_encrypt_pic)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -108,7 +108,7 @@ class Ui_Form(object):
         self.lineEdit_2.setText("")  # 密钥加载路径
 
     # 选取保存临时随机密钥的路径
-    def choose_path_save_key(self):
+    def path_save_key(self):
         file_name, filetype = \
             QFileDialog.getSaveFileName(None,
                                         "文件保存",
@@ -134,7 +134,7 @@ class Ui_Form(object):
         return
 
     # 选取加密密钥文件的路径
-    def choose_path_load_key(self):
+    def path_load_key(self):
         file_name, filetype = \
             QFileDialog.getOpenFileName(None,
                                         "选取文件",
@@ -148,7 +148,7 @@ class Ui_Form(object):
             return
 
     # 选择被加密图片所在路径
-    def choose_path_load_pic(self):
+    def path_load_pic(self):
         file_name, filetype = \
             QFileDialog.getOpenFileName(None,
                                         "选取文件",
@@ -162,7 +162,7 @@ class Ui_Form(object):
             return
 
     # 保存已加密图片
-    def encrypt_save_pic(self):
+    def save_encrypt_pic(self):
         if encode_pic is not None:
 
             self.label_6.setText("加密成功")
