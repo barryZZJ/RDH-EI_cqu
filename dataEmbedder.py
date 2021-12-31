@@ -112,7 +112,19 @@ class DataEmbedder:
         从字节流img中提取信息，返回提取出的信息字节流
         *yzy*
         """
-        pass
+        img = BitStream(bytes=img)
+        blocks_of_lsb = self._extract_lsb(img)
+        blocks_of_lsb = self._reverse_shuffle(blocks_of_lsb)
+        bitstream_lsb = join(blocks_of_lsb)
+        K = len(blocks_of_lsb)
+        L = K // EMBED_PARAM_U
+        g = segment_every(bitstream_lsb, 64 * EMBED_PARAM_U)
+        datas = []
+        for k in range(L):
+            datas.append(g[k][:EMBED_PARAM_W])
+        data = join(datas)
+        data = self._decrypt_data(data.bytes)
+        return data
 
     def perfect_decrypt(self, data: bytes, img: bytes) -> Image.Image:
         """
@@ -324,7 +336,6 @@ class DataEmbedder:
 
 if __name__ == '__main__':
     #TODO
-    # 5. extract
     # 6. 参数w, u与图片和信息量自动适配 + data自动填充至所需长度
     de = DataEmbedder()
     img = img_to_bitstream(PIC_128_PATH)
