@@ -279,10 +279,13 @@ class DataEmbedder:
     @staticmethod
     def _sub_group_lsb(imgk: BitStream, sub: BitStream) -> BitStream:
         """
-        把img中的一组的每一块的LSB替换为sub。考虑sub_LSB能否直接实现。
+        把img中的一组u个块的LSB替换为sub。考虑sub_LSB能否直接实现。
         *zzj*
+
+        :param imgk: size=64b*8 *u
+        :param sub: size=64b *u
         """
-        pass
+        return DataEmbedder._sub_lsb(imgk, sub)
 
     @staticmethod
     def _optimize(blocks_k: List[List[Image.Image]]) -> int:
