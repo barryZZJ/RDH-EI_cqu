@@ -11,7 +11,7 @@ import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 
-key = 'test'
+key = str('')
 pic = None
 encode_pic = None
 
@@ -125,7 +125,7 @@ class Ui_Form(object):
     def save_key(self):
         save_path = self.lineEdit.text()
         f = open(save_path, 'w')
-        if key is not None:
+        if key != '':
             f.write(key)
             self.label_3.setText("保存成功")
         else:
