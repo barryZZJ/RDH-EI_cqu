@@ -1,12 +1,11 @@
+import secrets
 from bitstring import BitStream
 from typing import List
-import json
 from PIL import Image
-
 from consts import *
 from aesutil import AESUtil
 from imgUil import segment_every
-
+from Crypto.Cipher import AES
 DEBUG = True
 #! 测试数据使用consts.py中的常量，有改动在consts.py中修改
 class DataEmbedder:
@@ -36,8 +35,6 @@ class DataEmbedder:
         else:
             self.aes = None
 
-
-
     def save_config(self, config: str = EMBED_CONFIG_PATH):
         """
         保存key到配置文件中
@@ -45,24 +42,28 @@ class DataEmbedder:
 
         :param config: 配置文件路径字符串
         """
-        pass  # pass为占位符，实现时删掉该行
+        with open(config, 'wb') as f:
+            f.write(self.key)
 
-    def read_config(self, config: str = EMBED_CONFIG_PATH) -> str:
+
+    def read_config(self, config: str = EMBED_CONFIG_PATH) -> bytes:
         """
         从配置文件中读取key，并返回key
         *yzy*
 
         :param config: 配置文件路径字符串
         """
-        pass
+        with open(config, 'rb') as f:
+            key = f.read()
+        return key
 
-    def rand_init(self) -> str:
+    def rand_init(self) -> bytes:
         """
-        随机初始化key，并返回key。TODO 密钥长度是否有影响。使用EMBED_KEY_LEN
+        随机初始化key，并返回key。
         *yzy*
         """
-
-        pass
+        key = secrets.token_bytes(EMBED_KEY_LEN)
+        return key
 
     def embed(self, data: bytes, img: bytes) -> bytes:
         """
@@ -129,11 +130,26 @@ class DataEmbedder:
 
     def encrypt_data(self, data: bytes) -> bytes:
         """
-        对要嵌入的数据用self.key加密。
+        对要嵌入的数据用self.key加密，且输入长度与输出长度相同。
         *yzy*
         """
-        # 可以用Crypto库里的现有算法。
-        pass
+        aes = AES.new(self.key, AES.MODE_ECB)
+        if len(data) % 16 != 0:
+            # 填充至16字节的倍数
+            data += b'\0' * (16 - len(data) % 16)
+        ciphertext = aes.encrypt(data)
+        return ciphertext
+
+    def decrypt_data(self, data: bytes) -> bytes:
+        """
+        对要提取出的数据用self.key解密。
+        *yzy*
+        """
+        aes = AES.new(self.key, AES.MODE_ECB)
+        message = aes.decrypt(data)
+        message = message.rstrip(b'\0')
+        return message
+
 
     def sub_LSB(self, img: BitStream, sub: BitStream) -> BitStream:
         """
