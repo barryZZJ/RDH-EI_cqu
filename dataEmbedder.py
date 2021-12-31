@@ -69,9 +69,21 @@ class DataEmbedder:
         key = secrets.token_bytes(EMBED_KEY_LEN)
         return key
 
-    def embed(self, data: bytes, img: List[BitStream]) -> List[BitStream]:
+    def embed(self, data: bytes, img: bytes) -> bytes:
         """
         把字节流data嵌入到密文字节流img中，返回嵌入后的字节流
+        """
+        bimg=BitStream(bytes=img)#把img转为BitStream
+        lsb=self.extract_LSB(bimg)#取出lsb
+        rlsb=self.shuffle(lsb)#打乱lsb
+        elsb=self.embed_lsb(data,rlsb)#把密文嵌入打乱后的lsb
+        ming=self.sub_LSB(bimg,elsb)#把嵌入后的lsb放入原密文字节流的lsb中
+        return ming.bytes
+        pass
+
+    def embed_lsb(self, data: bytes, img: List[BitStream]) -> List[BitStream]:
+        """
+        把字节流data嵌入到密文字节流lsb中，返回嵌入后的字节流
         *zt*
         """
         #先把img分成l组l=K/u,每组64u个bits,变成列表g
