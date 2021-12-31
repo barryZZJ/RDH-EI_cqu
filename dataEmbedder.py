@@ -55,7 +55,6 @@ class DataEmbedder:
         with open(config, 'wb') as f:
             f.write(self.key)
 
-
     @staticmethod
     def _read_config(config: str = EMBED_CONFIG_PATH) -> bytes:
         """
@@ -86,26 +85,26 @@ class DataEmbedder:
         """
         #TODO 检测嵌入数据量是否过大
         img = BitStream(bytes=img)  # 把img转为BitStream
-        blocks_of_lsb = self.extract_lsb(img)  # 取出lsb, shape: (K), 大小64bit*K
-        blocks_of_lsb = self.shuffle(blocks_of_lsb)  # 打乱lsb
-        bitstream_LSB = join(blocks_of_lsb)
+        blocks_of_lsb = self._extract_lsb(img)  # 取出lsb, shape: (K), 大小64bit*K
+        blocks_of_lsb = self._shuffle(blocks_of_lsb)  # 打乱lsb
+        bitstream_lsb = join(blocks_of_lsb)
         K = len(blocks_of_lsb)
         L = K // EMBED_PARAM_U
         # 把bitstream_LSB分成L个组，每组包含了u个块的LSB，每组为64*u bit
-        g = segment_every(bitstream_LSB, 64 * EMBED_PARAM_U)
-        H = self.gen_matrix()
+        g = segment_every(bitstream_lsb, 64 * EMBED_PARAM_U)
+        H = self._gen_matrix()
         # 把嵌入数据加密后data（l*w bits）分成l块，每块w bits,变成列表datas
-        data = self.encrypt_data(data)
+        data = self._encrypt_data(data)
         data = BitStream(bytes=data)
         datas = segment_every(data, EMBED_PARAM_W)
         # 计算每一次的ak(w bits)和gk(64u bits)和rk(w bits)和vk（64u bits）
         v_groups = []
         for k in range(0, L):
             r_k = datas[k] ^ g[k][:EMBED_PARAM_W]
-            v_k = self.dot(r_k, H) ^ g[k]
+            v_k = self._dot(r_k, H) ^ g[k]
             v_groups.append(v_k)
         v = join(v_groups)  # 64*u * L
-        img = self.sub_lsb(img, v)  # 把嵌入后的lsb放入原密文字节流的lsb中
+        img = self._sub_lsb(img, v)  # 把嵌入后的lsb放入原密文字节流的lsb中
         return img.bytes
 
     def extract(self, img: bytes) -> bytes:
@@ -125,15 +124,15 @@ class DataEmbedder:
         """
         assert isinstance(self.aes, AESUtil)
         img = BitStream(bytes=img)
-        blocks_of_LSB = self.extract_LSB(img)
-        blocks_of_LSB = self.reverse_shuffle(blocks_of_LSB)
-        bitstream_LSB = join(blocks_of_LSB)
-        K = len(blocks_of_LSB)
+        blocks_of_lsb = self._extract_lsb(img)
+        blocks_of_lsb = self._reverse_shuffle(blocks_of_lsb)
+        bitstream_lsb = join(blocks_of_lsb)
+        K = len(blocks_of_lsb)
         L = K//EMBED_PARAM_U
-        # 把bitstream_LSB分成L个组，每组包含了u个块的LSB，每组为64*u bit
-        g = segment_every(bitstream_LSB, 64*EMBED_PARAM_U)
-        H = self.gen_matrix()
-        data = self.encrypt_data(data)
+        # 把bitstream_lsb分成L个组，每组包含了u个块的LSB，每组为64*u bit
+        g = segment_every(bitstream_lsb, 64*EMBED_PARAM_U)
+        H = self._gen_matrix()
+        data = self._encrypt_data(data)
         data = BitStream(bytes=data)
         datas = segment_every(data, EMBED_PARAM_W)
         # 以组为单位，尝试恢复 gk
@@ -147,18 +146,19 @@ class DataEmbedder:
             for l in range(2**EMBED_PARAM_W):
                 t_l = BitStream(uint=l, length=EMBED_PARAM_W)
                 r_k = datas[k] ^ t_l
-                w_k = g[k] ^ self.dot(r_k, H)  # TODO 点乘待实现
-                e_k = self.sub_group_LSB(e_k, w_k)  # 把e_k的LSB替换为w_k，即论文中的r
+                w_k = g[k] ^ self._dot(r_k, H)
+                e_k = self._sub_group_lsb(e_k, w_k)  # 把e_k的LSB替换为w_k，即论文中的r
                 e_k = self.aes.decrypt(e_k.bytes, iv=e_grouped[k-1][-128:].bytes if k > 0 else None)  # TODO 正确性待检查 # 只解密第k组的u个块，iv为上一组的最后128bit
                 e_k = BitStream(bytes=e_k)
                 P_kl = bitstream_to_blocks(e_k)  # u个8x8的像素块列表
                 blocks_k[l] = P_kl  # 记录第l种情况下的u个块
-            best_l = self.optimize(blocks_k)  # TODO 正确性待检查
+            best_l = self._optimize(blocks_k)  # TODO 正确性待检查
             best_blocks.extend(blocks_k[best_l])  # 最合理的u个块添加到结果中
         best_img = _from_blocks(best_blocks)
         return best_img
 
-    def extract_lsb(self, img: BitStream) -> List[BitStream]:
+    @staticmethod
+    def _extract_lsb(img: BitStream) -> List[BitStream]:
         """
         提取出每块的LSB，组成列表。[c0^(0), c1^(0),...,ck-1^(0)]。共64bit * K
 
@@ -172,7 +172,7 @@ class DataEmbedder:
             lsbs.append(segs[i][:64])
         return lsbs
 
-    def shuffle(self, blocks_of_lsb: List[BitStream]) -> List[BitStream]:
+    def _shuffle(self, blocks_of_lsb: List[BitStream]) -> List[BitStream]:
         """
         打乱列表里的每个元素，要求算法可逆，密钥使用self.key。
 
@@ -190,7 +190,7 @@ class DataEmbedder:
             new_blocks_of_lsb.append(blocks_of_lsb[rlist[i]])
         return new_blocks_of_lsb
 
-    def reverse_shuffle(self, blocks_of_lsb: List[BitStream]) -> List[BitStream]:
+    def _reverse_shuffle(self, blocks_of_lsb: List[BitStream]) -> List[BitStream]:
         """
         上面算法的逆。
 
@@ -211,7 +211,7 @@ class DataEmbedder:
             new_blocks_of_lsb.append(blocks_of_lsb[rrlist[i]])
         return new_blocks_of_lsb
 
-    def gen_matrix(self) -> NDArray[int]:
+    def _gen_matrix(self) -> NDArray[int]:
         """
         生成H=[I, Q]，其中Q用self.key随机初始化，返回矩阵H。
         *zt*
@@ -229,7 +229,8 @@ class DataEmbedder:
         h = np.append(i, q, axis=1)
         return h
 
-    def dot(self, bits: BitStream, matrix: NDArray[int]) -> BitStream:
+    @staticmethod
+    def _dot(bits: BitStream, matrix: NDArray[int]) -> BitStream:
         """
         比特流与矩阵点乘。
         FIXME: 目前为把bits转换为整数，相乘后转换回比特流。感觉效率最高的是生成Bits矩阵，比特之间直接相乘，但得手动实现。
@@ -238,14 +239,7 @@ class DataEmbedder:
         res = np.dot(bits, matrix)
         return BitStream(auto=res) # int列表自动识别为二进制流
 
-    #TODO
-    def dot(self, bits: BitStream, matrix) -> BitStream:
-        """
-        比特流与矩阵点乘
-        """
-        pass
-
-    def encrypt_data(self, data: bytes) -> bytes:
+    def _encrypt_data(self, data: bytes) -> bytes:
         """
         对要嵌入的数据用self.key加密，且输入长度与输出长度相同。
         *yzy*
@@ -257,7 +251,7 @@ class DataEmbedder:
         ciphertext = aes.encrypt(data)
         return ciphertext
 
-    def decrypt_data(self, data: bytes) -> bytes:
+    def _decrypt_data(self, data: bytes) -> bytes:
         """
         对要提取出的数据用self.key解密。
         *yzy*
@@ -267,7 +261,8 @@ class DataEmbedder:
         message = message.rstrip(b'\0')
         return message
 
-    def sub_lsb(self, img: BitStream, sub: BitStream) -> BitStream:
+    @staticmethod
+    def _sub_lsb(img: BitStream, sub: BitStream) -> BitStream:
         """
         把img中每一块的LSB替换为sub。根据实际情况sub可以改为List[BitStream]。
         *zt*
@@ -281,14 +276,16 @@ class DataEmbedder:
         img = join(segs)
         return img
 
-    def sub_group_lsb(self, imgk: BitStream, sub: BitStream) -> BitStream:
+    @staticmethod
+    def _sub_group_lsb(imgk: BitStream, sub: BitStream) -> BitStream:
         """
         把img中的一组的每一块的LSB替换为sub。考虑sub_LSB能否直接实现。
         *zzj*
         """
         pass
 
-    def optimize(self, blocks_k: List[List[Image.Image]]) -> int:
+    @staticmethod
+    def _optimize(blocks_k: List[List[Image.Image]]) -> int:
         """
         优化算法算出最合理的图片对应的情况。返回该情况对应的下标。
         *zzj*
@@ -324,10 +321,6 @@ class DataEmbedder:
 
 if __name__ == '__main__':
     #TODO
-    # 1. lsb
-    # 2. decrypt data
-    # 3. 内部函数
-    # 4. 静态函数
     # 5. extract
     # 6. 参数w, u与图片和信息量自动适配 + data自动填充至所需长度
     de = DataEmbedder()
