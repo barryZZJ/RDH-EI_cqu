@@ -67,7 +67,7 @@ def segment_every(bitstream: BitStream, bits: int) -> List[BitStream]:
     注：加密器使用该输出时，可以通过列表里每个BitStream对象的bytes成员(如bitstream.bytes)把BitStream对象转换为字节。
     """
     list_of_bitplanes = []
-    for k in range(0,int(len(bitstream)/bits)):
+    for k in range(0, len(bitstream)//bits):
         list_of_bitplanes.append(bitstream[k*bits:(k+1)*bits])
     return list_of_bitplanes
 
@@ -81,12 +81,12 @@ def join(seg: List[BitStream]) -> BitStream:
 
 def bitstream_to_img(bitstream: BitStream) -> Image.Image:
     """输入密文字节流e，计算对应像素值，解码为图片，即img_to_bitstream的逆过程。"""
-    blocks = bitstream_to_blocks(bitstream)
+    blocks = _bitstream_to_blocks(bitstream)
     img = _from_blocks(blocks)
     #! 如果有需要可以添加保存到本地的函数
     return img
 
-def bitstream_to_blocks(bitstream: BitStream) -> List[Image.Image]:
+def _bitstream_to_blocks(bitstream: BitStream) -> List[Image.Image]:
     """输入密文字节流e，计算对应像素值，解码为各个图片块，不需要拼接"""
     list_of_bitplanes = segment_every(bitstream, 512)  # 分成K个512 bits的列表，每个元素是一个块的位平面列表
     blocks = []
