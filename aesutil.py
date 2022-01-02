@@ -27,7 +27,7 @@ class AESUtil:
         with open(config, "wb") as f:
             f.writelines([
                 self.iv,
-                b'\n',
+                b'\0',
                 self.key
             ])
 
@@ -38,7 +38,7 @@ class AESUtil:
         :param config: 配置文件路径字符串
         """
         with open(config, "rb") as f:
-            iv, key = f.read().splitlines()
+            iv, key = f.read().split(b'\0')
         return iv, key
 
     def load_config(self, config: str = AES_CONFIG_PATH):
@@ -50,13 +50,12 @@ class AESUtil:
     @staticmethod
     def _rand_init() -> Tuple[bytes, bytes]:
         """随机初始化iv和key"""
-        iv = secrets.token_bytes(16)
-        key = secrets.token_bytes(16)
+        iv = secrets.token_bytes(16).replace(b'\0', b'\x01') # 避免出现分隔符，方便读取文件
+        key = secrets.token_bytes(16).replace(b'\0', b'\x01')
         return iv, key
 
     def encrypt(self, m: bytes) -> bytes:
         """对明文字节流m加密，返回密文字节流"""
-
         iv = self.iv
         key = self.key
         cipher = AES.new(key, AES.MODE_CBC, iv)
