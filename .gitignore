@@ -130,3 +130,5 @@ dmypy.json
 
 .idea
 2.jpg
+*.key
+/result
