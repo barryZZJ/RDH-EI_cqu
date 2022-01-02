@@ -1,9 +1,9 @@
 import os
 import sys
+import preview
 from gui import downloader
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QWidget
 from PyQt5 import QtWidgets
-from preview import preview_Ui
 
 
 class downloader_main(QtWidgets.QDialog, downloader.Ui_Form):
@@ -108,7 +108,7 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form):
 class Child(QWidget):
     def __init__(self):
         super(Child, self).__init__()
-        pre_ui = preview_Ui()
+        pre_ui = preview.Ui_Form()
         pre_ui.setupUi(self)
         self.setWindowTitle("嵌入信息预览")
 
