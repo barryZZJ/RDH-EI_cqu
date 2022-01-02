@@ -2,18 +2,16 @@ import os
 import sys
 import consts
 from gui import uploader
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5 import QtWidgets
 from aesutil import AESUtil
+from imgUil import *
 
 
 class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
     def __init__(self):
         super(uploader_main, self).__init__()
         self.cwd = os.getcwd()  # 获取当前程序文件位置
-        self.key = str('')
-        self.pic = None
-        self.encode_pic = None
         self.setupUi(self)
 
         self.setWindowTitle("Uploader")
@@ -31,7 +29,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
         file_name, filetype = \
             QFileDialog.getSaveFileName(self,
                                         "文件保存",
-                                        self.cwd + consts.AES_CONFIG_PATH,  # 起始路径
+                                        self.cwd + consts.AES_CONFIG_PATH,
                                         "Text Files (*.key);;")
         if file_name == "":  # 空路径
             return
@@ -59,7 +57,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
         file_name, filetype = \
             QFileDialog.getOpenFileName(None,
                                         "选取文件",
-                                        self.cwd + consts.AES_CONFIG_PATH,  # 起始路径
+                                        self.cwd + consts.AES_CONFIG_PATH,
                                         "Key Files (*.key);;")
         if file_name == "":  # 空路径
             return
@@ -73,7 +71,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
         file_name, filetype = \
             QFileDialog.getOpenFileName(None,
                                         "选取文件",
-                                        self.cwd,  # 起始路径
+                                        self.cwd,
                                         "BMP Pic Files (*.bmp);;"
                                         "JPG Pic Files (*.jpg);;"
                                         "PNG Pic Files (*.png);;"
@@ -86,18 +84,46 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
             return
 
     # 加密并保存图片
+    # noinspection PyBroadException
     def save_encrypt_pic(self):
-        # 检查是否使用加载密钥
-        path_load_key = self.lineEdit_load_key.text()
-        if path_load_key != '':
-            self.aes_util.load_config(config=path_load_key)
+        try:
+            # 检查是否使用加载密钥
+            path_load_key = self.lineEdit_load_key.text()
+            if path_load_key != '':
+                self.aes_util.load_config(config=path_load_key)
 
+            # 加载原始图片
+            path_load_pic = self.lineEdit_load_pic.text()
+            pic_bitstream = img_to_bitstream(path_load_pic)
 
-        if self.encode_pic is not None:
+            # 加密
+            pic_encrypted_bitstream = self.aes_util.encrypt(pic_bitstream.bytes)
+
+            # 保存
+            pic_bitstream_encrypted = bitstream_to_img(bitstream(pic_encrypted_bitstream))
+
+            # 保存加密图片的路径
+            # 保存文件浏览框
+            file_name, filetype = \
+                QFileDialog.getSaveFileName(self,
+                                            "文件保存",
+                                            self.cwd + "untitled.jpg",
+                                            "BMP Pic Files (*.bmp);;"
+                                            "JPG Pic Files (*.jpg);;"
+                                            "PNG Pic Files (*.png);;"
+                                            "All Files (*)")
+            path_save_pic = file_name
+            pic_bitstream_encrypted.save(path_save_pic)
             self.label_encryt_flag.setText("<font color='green'>保存成功</font>")
-        else:
+            return
+        except IOError:
             self.label_encryt_flag.setText("<font color='red'>保存失败</font>")
-        return
+            return
+        except Exception as e:
+            QMessageBox.critical(None, "错误", str(e), QMessageBox.Yes | QMessageBox.No)
+            return
+        finally:
+            return
 
 
 if __name__ == '__main__':
