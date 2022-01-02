@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>407</width>
-    <height>238</height>
+    <height>298</height>
    </rect>
   </property>
   <property name="font">
@@ -20,6 +20,43 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QGroupBox" name="groupBox_conf">
+     <property name="title">
+      <string>当前参数</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_U">
+        <property name="font">
+         <font>
+          <family>Microsoft YaHei UI</family>
+          <pointsize>9</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>U = </string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="label_W">
+        <property name="font">
+         <font>
+          <family>Microsoft YaHei UI</family>
+          <pointsize>9</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>W = </string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBox_2">
      <property name="font">
       <font>
@@ -30,39 +67,56 @@
       <string/>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="3">
-       <widget class="QPushButton" name="pushButton_2">
+      <item row="2" column="3">
+       <widget class="QPushButton" name="pushButton_save_conf">
         <property name="text">
-         <string>浏览</string>
+         <string>保存密钥和参数</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="QLabel" name="label_3">
+      <item row="2" column="0" colspan="2">
+       <widget class="QLabel" name="label_save_conf_flag">
         <property name="font">
          <font>
           <family>Microsoft Uighur</family>
          </font>
         </property>
         <property name="text">
-         <string>保存成功/失败</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QPushButton" name="pushButton_4">
-        <property name="text">
-         <string>保存</string>
+         <string/>
         </property>
        </widget>
       </item>
       <item row="0" column="2">
-       <widget class="QLineEdit" name="lineEdit"/>
+       <widget class="QLineEdit" name="lineEdit_save_conf"/>
       </item>
       <item row="0" column="0">
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="label_save_conf">
         <property name="text">
-         <string>保存临时随机密钥</string>
+         <string>保存当前密钥和参数</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QPushButton" name="pushButton_explore_save_conf">
+        <property name="text">
+         <string>浏览</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_load_conf">
+        <property name="text">
+         <string>加载密钥和参数</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="lineEdit_load_conf"/>
+      </item>
+      <item row="1" column="3">
+       <widget class="QPushButton" name="pushButton_explore_load_conf">
+        <property name="text">
+         <string>浏览</string>
         </property>
        </widget>
       </item>
@@ -80,68 +134,51 @@
       <string/>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="lineEdit_2"/>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>加载密钥文件</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QPushButton" name="pushButton_6">
-        <property name="text">
-         <string>浏览</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>加载嵌入文本</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="1">
-       <widget class="QLineEdit" name="lineEdit_3"/>
-      </item>
-      <item row="3" column="2">
-       <widget class="QPushButton" name="pushButton_5">
-        <property name="text">
-         <string>嵌入并保存</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="lineEdit_4"/>
+       <widget class="QLineEdit" name="lineEdit_load_pic"/>
       </item>
       <item row="2" column="2">
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="pushButton_explore_load_pic">
         <property name="text">
          <string>浏览</string>
         </property>
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="label_4">
+       <widget class="QLabel" name="label_load_pic">
         <property name="text">
          <string>选择嵌入图片</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QPushButton" name="pushButton_7">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="lineEdit_load_embed_text"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QPushButton" name="pushButton_explore_load_embed_text">
         <property name="text">
          <string>浏览</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_6">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_load_embed_text">
         <property name="text">
-         <string>嵌入成功</string>
+         <string>加载嵌入文本</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_save_pic_flag">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QPushButton" name="pushButton_save_pic">
+        <property name="text">
+         <string>嵌入并保存</string>
         </property>
        </widget>
       </item>
@@ -151,102 +188,5 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>pushButton_2</sender>
-   <signal>clicked()</signal>
-   <receiver>pushButton_2</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>365</x>
-     <y>29</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>335</x>
-     <y>23</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton_4</sender>
-   <signal>clicked()</signal>
-   <receiver>pushButton_4</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>382</x>
-     <y>65</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>342</x>
-     <y>62</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton_7</sender>
-   <signal>clicked()</signal>
-   <receiver>pushButton_7</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>363</x>
-     <y>113</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>327</x>
-     <y>107</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton_6</sender>
-   <signal>clicked()</signal>
-   <receiver>pushButton_6</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>359</x>
-     <y>139</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>328</x>
-     <y>143</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton_3</sender>
-   <signal>clicked()</signal>
-   <receiver>pushButton_3</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>373</x>
-     <y>172</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>332</x>
-     <y>169</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton_5</sender>
-   <signal>clicked()</signal>
-   <receiver>pushButton_5</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>358</x>
-     <y>212</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>332</x>
-     <y>211</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
