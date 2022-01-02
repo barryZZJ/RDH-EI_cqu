@@ -56,7 +56,7 @@ class DataUtil:
     def load_config(self, config: str = EMBED_CONFIG_PATH):
         self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
 
-    def determine_params(self, data: bytes, img: bytes):
+    def optimize_params(self, data_bits: int, img_bits: int):
         """
         为了优化嵌入效果，根据data和图片大小动态调整参数W和U，自动确定最合适的参数组合
 
@@ -64,15 +64,16 @@ class DataUtil:
         """
         # w越小 u越大 效果越好
         # len(data) == K // u * w
-        K = len(img) // 512
+        K = img_bits // 512
+        data_bits = math.ceil(data_bits/128)*128
         # 选第一个满足data长度的组合
         for u, w in DataEmbedder.PARAM_PAIRS['perf']:
-            if len(data) <= K // u * w:
+            if data_bits <= K // u * w:
                 self.PARAM_U = u
                 self.PARAM_W = w
                 return
         for u, w in DataEmbedder.PARAM_PAIRS['noisy']:
-            if len(data) <= K // u * w:
+            if data_bits <= K // u * w:
                 self.PARAM_U = u
                 self.PARAM_W = w
                 raise DataLongError("嵌入数据量较大，无法保证无损恢复原图！")
@@ -265,7 +266,6 @@ class DataEmbedder(DataUtil):
         """
         img = BitStream(bytes=img)  # 把img转为BitStream
         blocks_of_lsb = self._extract_lsb(img)  # 取出lsb, shape: (K), 大小64bit*K
-        blocks_of_lsb = self._shuffle(blocks_of_lsb)  # 打乱lsb
         bitstream_lsb = join(blocks_of_lsb)
         K = len(blocks_of_lsb)
         L = K // self.PARAM_U
@@ -291,7 +291,7 @@ class DataEmbedder(DataUtil):
 
 class DataExtractor(DataUtil):
     """信息提取相关操作"""
-    def __init__(self, config: str = None, aesconfig: str = None):
+    def __init__(self, config, aesconfig: str = None):
         """
         如果config不为空则从配置文件初始化self.key，否则随机初始化self.key。
         如果aesconfig不为空，初始化AESUtil，用于完美解密图片。
@@ -300,10 +300,7 @@ class DataExtractor(DataUtil):
         :param config: 配置文件路径字符串
         :param aesconfig: 加解密相关配置文件路径字符串
         """
-        if config:
-            self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
-        else:
-            self.key, self.PARAM_U, self.PARAM_W = None, None, None
+        self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
 
         if aesconfig:
             self.aes = AESUtil(aesconfig)
@@ -321,11 +318,10 @@ class DataExtractor(DataUtil):
             raise ValueError("未加载嵌入密钥配置文件")
         img = BitStream(bytes=img)
         blocks_of_lsb = self._extract_lsb(img)
-        blocks_of_lsb = self._reverse_shuffle(blocks_of_lsb)
         bitstream_lsb = join(blocks_of_lsb)
         K = len(blocks_of_lsb)
         L = K // self.PARAM_U
-        g = segment_every(bitstream_lsb, 64 * self.PARAM_U)
+        g = segment_every(bitstream_lsb, 64 * self.PARAM_U)[:L]  # 考虑到K如果不能整除U，则丢弃达不到64u bit的最后一组
         datas = []
         for k in range(L):
             datas.append(g[k][:self.PARAM_W])
@@ -352,12 +348,11 @@ class DataExtractor(DataUtil):
             raise ValueError("未加载解密密钥配置文件")
         img = BitStream(bytes=img)
         blocks_of_lsb = DataEmbedder._extract_lsb(img)
-        blocks_of_lsb = self._reverse_shuffle(blocks_of_lsb)
         bitstream_lsb = join(blocks_of_lsb)
         K = len(blocks_of_lsb)
         L = K//self.PARAM_U
         # 把bitstream_lsb分成L个组，每组包含了u个块的LSB，每组为64*u bit
-        g = segment_every(bitstream_lsb, 64*self.PARAM_U)
+        g = segment_every(bitstream_lsb, 64*self.PARAM_U)[:L]  # 考虑到K如果不能整除U，则丢弃达不到64u bit的最后一组
         H = self._gen_matrix()
         data = self._encrypt_data(data)
         data = self._pad_data(data, L*self.PARAM_W)
