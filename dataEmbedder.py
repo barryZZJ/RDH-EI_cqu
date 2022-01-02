@@ -362,6 +362,7 @@ class DataExtractor(DataUtil):
         # 恢复原理：遍历 gk[:w]所有可能的取值，全部解密出原图（共w位，故2^w个图），通过数字统计关系选出最合理的那一个
         best_blocks = []
         e_grouped = segment_every(img, 512*self.PARAM_U)  # u个块(64b*8 * u)一组，共L组
+        iv = None
         for k in range(0, L-1 + 1):
             blocks_k = [None] * (2**self.PARAM_W)  # type: List[List[Image.Image]] # shape: (2^w, u)
             # blocks_k[l] = 第k组中，第l种情况的u个块
@@ -371,11 +372,12 @@ class DataExtractor(DataUtil):
                 r_k = datas[k] ^ t_l
                 w_k = g[k] ^ self._dot(r_k, H)
                 e_k = self._sub_group_lsb(e_k, w_k)  # 把e_k的LSB替换为w_k，即论文中的r
-                e_k = self.aes.decrypt(e_k.bytes, iv=e_grouped[k-1][-128:].bytes if k > 0 else None)  # TODO 正确性待检查 # 只解密第k组的u个块，iv为上一组的最后128bit
-                e_k = BitStream(bytes=e_k)
-                P_kl = _bitstream_to_blocks(e_k)  # u个8x8的像素块列表
+                m = self.aes.decrypt(e_k.bytes, iv=iv)  # 只解密第k组的u个块，iv为上一组的最后128bit
+                m = BitStream(bytes=m)
+                P_kl = _bitstream_to_blocks(m)  # u个8x8的像素块列表
                 blocks_k[l] = P_kl  # 记录第l种情况下的u个块
-            best_l = self._optimize(blocks_k)  # TODO 正确性待检查
+            iv = e_grouped[k][-128:].bytes
+            best_l = self._optimize(blocks_k)  # 正确性已检查
             best_blocks.extend(blocks_k[best_l])  # 最合理的u个块添加到结果中
         best_img = _from_blocks(best_blocks)
         return best_img
