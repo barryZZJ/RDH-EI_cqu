@@ -1,4 +1,4 @@
-import warnings
+import math
 import numpy as np
 from numpy.typing import NDArray
 import random
@@ -18,8 +18,9 @@ class DataLongError(BaseException):
     """用于嵌入数据量较大，无法保证无损恢复原图时的报错，当作Warning处理，在GUI中弹出提示即可"""
     pass
 
+
 class DataUtil:
-    """公共处理函数"""
+    """公共处理函数，主要为实现细节"""
     key: bytes
     PARAM_U: int
     PARAM_W: int
@@ -33,9 +34,9 @@ class DataUtil:
         """
         with open(config, 'wb') as f:
             f.write(self.key)
-            f.write(b'\n')
+            f.write(b'\0')
             f.write(str(self.PARAM_U).encode('utf8'))
-            f.write(b'\n')
+            f.write(b'\0')
             f.write(str(self.PARAM_W).encode('utf8'))
 
     @staticmethod
@@ -47,7 +48,9 @@ class DataUtil:
         :param config: 配置文件路径字符串
         """
         with open(config, 'rb') as f:
-            key, u, w = f.read().splitlines()
+            key, u, w = f.read().split(b'\0')
+        u = int(u.decode('utf8'))
+        w = int(w.decode('utf8'))
         return key, u, w
 
     def load_config(self, config: str = EMBED_CONFIG_PATH):
@@ -76,18 +79,17 @@ class DataUtil:
         raise ValueError("嵌入数据量过大，嵌入信息失败！")
 
     @staticmethod
-    def _fill_params(data: bytes, U: int, W: int) -> bytes:
-        """
-        W和U各占4bit，填入data的前8bit。
-        """
-        try:
-            assert W < (1 << 4)
-            assert U < (1 << 4)
-        except AssertionError:
-            raise ValueError("Internal Error: 填充的参数过长!")
-        w = BitStream(uint=W, length=4)
-        u = BitStream(uint=U, length=4)
-        data = (w + u).bytes + data[1:]
+    def _pad_data(data: bytes, seg_bits: int) -> bytes:
+        """填充data，使其长度至少达到 L*w = K//u*w 位"""
+        seg_len = seg_bits // 8
+        if len(data) % seg_len != 0:
+            data += b'\0' * (seg_len - len(data) % seg_len)
+        return data
+
+    @staticmethod
+    def _strip_padding(data: bytes) -> bytes:
+        """去除填充"""
+        data = data.rstrip(b'\0')
         return data
 
     def _shuffle(self, blocks_of_lsb: List[BitStream]) -> List[BitStream]:
@@ -179,7 +181,7 @@ class DataUtil:
         """
         aes = AES.new(self.key, AES.MODE_ECB)
         if len(data) % 16 != 0:
-            data += b'\0' * (16 - len(data) % 16)
+            data += b'\1' * (16 - len(data) % 16)
         ciphertext = aes.encrypt(data)
         return ciphertext
 
@@ -190,7 +192,7 @@ class DataUtil:
         """
         aes = AES.new(self.key, AES.MODE_ECB)
         message = aes.decrypt(data)
-        message = message.rstrip(b'\0')
+        message = message.rstrip(b'\1')
         return message
 
     @staticmethod
@@ -254,7 +256,7 @@ class DataEmbedder(DataUtil):
         随机初始化key，并返回key。
         *yzy*
         """
-        key = secrets.token_bytes(EMBED_KEY_LEN)
+        key = secrets.token_bytes(EMBED_KEY_LEN).replace(b'\0', b'\x01')
         return key
 
     def embed(self, data: bytes, img: bytes) -> bytes:
@@ -270,13 +272,15 @@ class DataEmbedder(DataUtil):
         # 把bitstream_LSB分成L个组，每组包含了u个块的LSB，每组为64*u bit
         g = segment_every(bitstream_lsb, 64 * self.PARAM_U)[:L]  # 考虑到K如果不能整除U，则丢弃达不到64u bit的最后一组
         H = self._gen_matrix()
-        # 把嵌入数据加密后data（l*w bits）分成l块，每块w bits,变成列表datas
+        # 把嵌入数据data加密后（填充至l*w bits）分成l块，每块w bits,变成列表datas
         data = self._encrypt_data(data)
+        # 填充data至L*w bits
+        data = self._pad_data(data, L*self.PARAM_W)
         data = BitStream(bytes=data)
         datas = segment_every(data, self.PARAM_W)
         # 计算每一次的ak(w bits)和gk(64u bits)和rk(w bits)和vk（64u bits）
         v_groups = []  # 64*u * L
-        for k in range(0, L):
+        for k in range(L):
             r_k = datas[k] ^ g[k][:self.PARAM_W]
             v_k = self._dot(r_k, H) ^ g[k]
             v_groups.append(v_k)
@@ -325,8 +329,9 @@ class DataExtractor(DataUtil):
         datas = []
         for k in range(L):
             datas.append(g[k][:self.PARAM_W])
-        data = join(datas)
-        data = self._decrypt_data(data.bytes)
+        data = join(datas).bytes
+        data = self._strip_padding(data)
+        data = self._decrypt_data(data)
         return data
 
     def perfect_decrypt(self, data: bytes, img: bytes) -> Image.Image:
@@ -355,6 +360,7 @@ class DataExtractor(DataUtil):
         g = segment_every(bitstream_lsb, 64*self.PARAM_U)
         H = self._gen_matrix()
         data = self._encrypt_data(data)
+        data = self._pad_data(data, L*self.PARAM_W)
         data = BitStream(bytes=data)
         datas = segment_every(data, self.PARAM_W)
         # 以组为单位，尝试恢复 gk
@@ -416,5 +422,4 @@ class DataExtractor(DataUtil):
         # 求最小的那一个的下标
         min_ind = np.argmin(block_diffs)
         return min_ind
-
 
