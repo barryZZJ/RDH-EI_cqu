@@ -103,7 +103,7 @@ def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
         for y in range(0,8):
             bitplanes2 += BitStream(bool=bitplanes[x+64*(7-y)])
     list_of_pixels = segment_every(bitplanes2, 8)
-    img = np.asarray([pixel.uint for pixel in list_of_pixels])
+    img = np.asarray([pixel.uint for pixel in list_of_pixels], dtype=np.uint8)
     img = img.reshape(8, 8)
     img = Image.fromarray(img)
     return img
