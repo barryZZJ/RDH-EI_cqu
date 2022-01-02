@@ -2,7 +2,7 @@ from typing import Tuple
 from bitstring import BitStream
 from consts import *
 from Crypto.Cipher import AES
-import random
+import secrets
 import imgUil
 
 class AESUtil:
@@ -50,8 +50,8 @@ class AESUtil:
     @staticmethod
     def _rand_init() -> Tuple[bytes, bytes]:
         """随机初始化iv和key"""
-        iv = random.randbytes(16)
-        key = random.randbytes(16)
+        iv = secrets.token_bytes(16)
+        key = secrets.token_bytes(16)
         return iv, key
 
     def encrypt(self, m: bytes) -> bytes:
