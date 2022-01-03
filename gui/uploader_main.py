@@ -1,7 +1,7 @@
 import os
 import sys
 
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import *
 
 import consts
 from gui import uploader
@@ -12,29 +12,43 @@ from imgUil import *
 from bitstring import BitStream
 
 
-class encrypt_thread(QThread):
-    def __init__(self, client):
-        super(encrypt_thread, self).__init__()
-        self.client = client
+class encrypt_thread(QObject):
+    start_signal = pyqtSignal()
+    finish_signal = pyqtSignal(str)
 
-    def run(self):
+    def __init__(self):
+        super(encrypt_thread, self).__init__()
+        self.path_load_pic = None
+        self.aes_util = None
+        self.path_save_pic = None
+
+    def config(self, path_load_pic, aes_util, path_save_pic):
+        self.path_load_pic = path_load_pic
+        self.aes_util = aes_util
+        self.path_save_pic = path_save_pic
+
+    def do_encrypt(self):
         try:
-            self.client.label_encrypt_flag.setText("<font color='yellow'>正在加密...</font>")
-            pic_bitstream = img_to_bitstream(self.client.path_load_pic)
+            self.start_signal.emit()
+            pic_bitstream = img_to_bitstream(self.path_load_pic)
+
             # 加密
-            pic_encrypted_bitstream = self.client.aes_util.encrypt(pic_bitstream.bytes)
+            pic_encrypted_bitstream = self.aes_util.encrypt(pic_bitstream.bytes)
             # 加密结果转换为图片
             pic_encrypted = bitstream_to_img(BitStream(bytes=pic_encrypted_bitstream))
-            pic_encrypted.save(self.client.path_save_pic)
-            self.client.label_encrypt_flag.setText("<font color='green'>保存成功</font>")
+            pic_encrypted.save(self.path_save_pic)
+            self.finish_signal.emit('Y')
+
         except Exception as exc:
             QMessageBox.critical(None, "错误", str(exc), QMessageBox.Yes | QMessageBox.No)
+            self.finish_signal.emit('N')
             self.terminate()
 
 
-class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
+class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
     def __init__(self):
         super(uploader_main, self).__init__()
+
         self.path_load_pic = None
         self.path_load_key = None
         self.path_save_pic = None
@@ -49,10 +63,14 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
         self.pushButton_save_encrypt_pic.clicked.connect(self.save_encrypt_pic)
 
         self.aes_util = AESUtil()
-        self.encrypt_thread = None
+        self.encrypt_thread = encrypt_thread()
+        self.thread = QThread()
+        self.thread.started.connect(self.encrypt_thread.do_encrypt)
+        self.thread.finished.connect(self.thread_quit)
+        self.encrypt_thread.start_signal.connect(self.encrypt_start)
+        self.encrypt_thread.finish_signal.connect(self.encrypt_finish)
 
-    def set_thread(self, thread):
-        self.encrypt_thread = thread
+        self.encrypt_thread.moveToThread(self.thread)
 
     # 浏览设定保存密钥路径
     def explore_save_key(self):
@@ -82,6 +100,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
         except IOError:
             self.label_save_flag.setText("<font color='red'>保存失败</font>")
             return
+        return
 
     # 设定加载密钥文件的路径
     def explore_load_key(self):
@@ -122,7 +141,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
             file_name, filetype = \
                 QFileDialog.getSaveFileName(self,
                                             "文件保存",
-                                            self.cwd + "/untitled.jpg",
+                                            self.cwd + "/untitled",
                                             "BMP Pic Files (*.bmp);;"
                                             "JPG Pic Files (*.jpg);;"
                                             "PNG Pic Files (*.png);;"
@@ -131,9 +150,11 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
             self.path_load_key = self.lineEdit_load_key.text()
             if self.path_load_key != '':
                 self.aes_util.load_config(config=self.path_load_key)
-            # 加载原始图片
             self.path_load_pic = self.lineEdit_load_pic.text()
-            self.encrypt_thread.run()
+            self.encrypt_thread.config(
+                path_save_pic=self.path_save_pic, aes_util=self.aes_util, path_load_pic=self.path_load_pic)
+            self.thread.start()
+
             return
         except IOError:
             self.label_encrypt_flag.setText("<font color='red'>保存失败</font>")
@@ -145,11 +166,23 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form):
         finally:
             return
 
+    def encrypt_start(self):
+        self.label_encrypt_flag.setText("<font color='yellow'>正在加密...</font>")
+        return
+
+    def encrypt_finish(self, info):
+        if info == 'Y':
+            self.label_encrypt_flag.setText("<font color='green'>保存成功</font>")
+        else:
+            self.label_encrypt_flag.setText("<font color='red'>保存失败</font>")
+        return
+
+    def thread_quit(self):
+        self.thread.quit()
+
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main = uploader_main()
-    e_t = encrypt_thread(main)
-    main.set_thread(e_t)
     main.show()
     sys.exit(app.exec_())
