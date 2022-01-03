@@ -56,6 +56,17 @@ class DataUtil:
     def load_config(self, config: str = EMBED_CONFIG_PATH):
         self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
 
+    @staticmethod
+    def read_data(file_path: str) -> bytes:
+        with open(file_path, 'rb') as f:
+            data = f.read()
+        return data
+
+    @staticmethod
+    def save_data(data: bytes, file_path: str):
+        with open(file_path, 'wb') as f:
+            f.write(data)
+
     def optimize_params(self, data_bits: int, img_bits: int):
         """
         为了优化嵌入效果，根据data和图片大小动态调整参数W和U，自动确定最合适的参数组合
