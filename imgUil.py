@@ -11,10 +11,10 @@ def img_to_bitstream(filepath: str) -> BitStream:
     # FIXME 目前只支持灰度图
     img = img.convert(mode="L")
     blocks = _to_blocks(img)  # type: List[Image.Image]  # 分成K个8x8的块 (论文中Oi)
-    list_of_bitplanes = []  # 所有位平面列表构成的列表 (论文中b), 512*K bit。一个位平面列表是论文中的bi, 64bit * 8 = 512 bit；一个位平面是论文中的bi^(k), 64 bit。
-    for block in blocks:
+    list_of_bitplanes = [BitStream(512)] * len(blocks)  # 所有位平面列表构成的列表 (论文中b), 512*K bit。一个位平面列表是论文中的bi, 64bit * 8 = 512 bit；一个位平面是论文中的bi^(k), 64 bit。
+    for k, block in enumerate(blocks):
         bitplanes = _block_to_bitplanes(block)  # 把一个块转换成位平面列表(论文中bi), 512 bit
-        list_of_bitplanes.append(bitplanes)
+        list_of_bitplanes[k] = bitplanes
 
     bitstream = join(list_of_bitplanes)  # 把列表合并成比特流
     return bitstream
@@ -25,11 +25,13 @@ def _to_blocks(img: Image.Image) -> List[Image.Image]:
     # 分成N*M个块
     M = img.width // 8
     N = img.height // 8
-    blocks = []
+    blocks = [Image.new('L', (8,8))] * (M*N)
+    i = 0
     for n in range(0, N):
         for m in range(0, M):
             box = (n*8, m*8, (n+1)*8, (m+1)*8)
-            blocks.append(img.crop(box))
+            blocks[i] = img.crop(box)
+            i += 1
     return blocks
 
 def _block_to_bitplanes(block: Image.Image) -> BitStream:
@@ -40,20 +42,24 @@ def _block_to_bitplanes(block: Image.Image) -> BitStream:
     # 下划线表示是内部函数，其他文件其他模块不需要关心。
     # 把每个像素点转换成二进制
     px = block.load()
-    pixels = []  # type: List[BitStream] # 共64个像素点
+    pixels = [BitStream(8)]*64  # type: List[BitStream] # 共64个像素点
+    i = 0
     for y in range(block.height):
         for x in range(block.width):
             # x=0~width, y=0~height
             pixel = px[x,y]
-            pixels.append(BitStream(uint=pixel, length=8))  # 8位无符号整数
+            pixels[i] = BitStream(uint=pixel, length=8)  # 8位无符号整数
+            i += 1
     # 生成bitplanes，即论文中的向量组bi，64bit * 8 = 512 bit
-    bitplanes = []
+    bitplanes = [BitStream(64)] * 8
+    i = 0
     for k in range(-1, -8-1, -1):
         # 把每个像素点的第k位取出来组成一个bitplane，即论文中的bi^(k)，64 bit
         bitplane = BitStream()
         for pixel in pixels: # 64个像素
             bitplane += BitStream(bool=pixel[k])  # k=-1即第0位(最低位)，-2即第1位，以此类推
-        bitplanes.append(bitplane)
+        bitplanes[i] = bitplane
+        i += 1
 
     bitplanes = join(bitplanes)  # 把列表合并成比特流
     return bitplanes
@@ -66,9 +72,9 @@ def segment_every(bitstream: BitStream, bits: int) -> List[BitStream]:
 
     注：加密器使用该输出时，可以通过列表里每个BitStream对象的bytes成员(如bitstream.bytes)把BitStream对象转换为字节。
     """
-    list_of_bitplanes = []
+    list_of_bitplanes = [BitStream(bits)] * (len(bitstream)//bits)
     for k in range(0, len(bitstream)//bits):
-        list_of_bitplanes.append(bitstream[k*bits:(k+1)*bits])
+        list_of_bitplanes[k] = bitstream[k*bits:(k+1)*bits]
     return list_of_bitplanes
 
 def join(seg: List[BitStream]) -> BitStream:
@@ -89,10 +95,10 @@ def bitstream_to_img(bitstream: BitStream) -> Image.Image:
 def _bitstream_to_blocks(bitstream: BitStream) -> List[Image.Image]:
     """输入密文字节流e，计算对应像素值，解码为各个图片块，不需要拼接"""
     list_of_bitplanes = segment_every(bitstream, 512)  # 分成K个512 bits的列表，每个元素是一个块的位平面列表
-    blocks = []
-    for bitplanes in list_of_bitplanes:
+    blocks = [Image.new('L', (8,8))] * len(list_of_bitplanes)
+    for k, bitplanes in enumerate(list_of_bitplanes):
         block = _bitplanes_to_block(bitplanes)
-        blocks.append(block)
+        blocks[k] = block
     return blocks
 
 def _bitplanes_to_block(bitplanes: BitStream) -> Image.Image:
@@ -147,24 +153,11 @@ if __name__ == '__main__':
         outfile = '%s/%s.jpg' % ("pics/split_pic",n)
         img_block.save(outfile) 
     """
-    #测试 img_to_bitstream，用小图片进行测试，与_block_to_bitplanes的结果进行对比，观察是否一样
-    block = Image.open(PIC_8_PATH)
-    list_of_bitplans2 = []
-    list_of_bitplanes = []  # 所有位平面列表构成的列表 (论文中b), 512*K bit。一个位平面列表是论文中的bi, 64bit * 8 = 512 bit；一个位平面是论文中的bi^(k), 64 bit。
-    bitplanes = _block_to_bitplanes(block)  # 把一个块转换成bitplanes，即论文中的bi, 512 bit
-    list_of_bitplanes.append(bitplanes)
-    bitplanes2 = img_to_bitstream(PIC_8_PATH)
-    list_of_bitplans2.append(bitplanes2)
-    block = Image.open(PIC_8_2_PATH)
-    bitplanes = _block_to_bitplanes(block)  # 把一个块转换成位平面列表(论文中bi), 512 bit
-    list_of_bitplanes.append(bitplanes)
-    bitplanes2 = img_to_bitstream(PIC_8_2_PATH)
-    list_of_bitplans2.append(bitplanes2)
-    bitstream = join(list_of_bitplanes)  # 把列表合并成比特流
-    bitstream2 = join(list_of_bitplans2)
-    print(bitstream)
-    print(bitstream2)
-    #用pic_8_2_path图片产生的bit流来测试bitstream_to_img
-    bitplanes2 = img_to_bitstream(PIC_512_PATH)
-    pic = bitstream_to_img(bitplanes2)
-    pic.save("2.jpg")
+    import time
+    st = time.time()
+    bs=img_to_bitstream(PIC_512_PATH)
+    print(time.time() - st)
+
+    st = time.time()
+    img = bitstream_to_img(bs)
+    print(time.time() - st)
