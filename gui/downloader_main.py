@@ -2,11 +2,12 @@ import os
 import sys
 import preview
 from gui import downloader
+from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QWidget
 from PyQt5 import QtWidgets
 
 
-class downloader_main(QtWidgets.QDialog, downloader.Ui_Form):
+class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
     def __init__(self):
         super(downloader_main, self).__init__()
         self.cwd = os.getcwd()  # 获取当前程序文件位置

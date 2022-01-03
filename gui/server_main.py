@@ -5,7 +5,7 @@ from PyQt5.QtCore import *
 
 from dataEmbedder import DataEmbedder
 from gui import server
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5 import QtWidgets
 
 
@@ -14,6 +14,9 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
 
     def __init__(self):
         super(server_main, self).__init__()
+        self.path_load_pic = None
+        self.path_save_pic = None
+        self.path_load_key = None
         self.cwd = os.getcwd()  # 获取当前程序文件位置
         self.setupUi(self)
 
@@ -71,6 +74,7 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
             self.lineEdit_load_conf.setText(file_name)
             return
 
+    # 设定加载嵌入文本的路径
     def explore_load_embed_text(self):
         file_name, filetype = \
             QFileDialog.getOpenFileName(None,
@@ -84,12 +88,16 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
             self.lineEdit_load_embed_text.setText(file_name)
             return
 
+    # 设定加载图片的路径
     def explore_load_pic(self):
         file_name, filetype = \
             QFileDialog.getOpenFileName(None,
                                         "选取文件",
-                                        self.cwd,  # 起始路径
-                                        "Text Files (*.jpg);;")
+                                        self.cwd,
+                                        "BMP Pic Files (*.bmp);;"
+                                        "JPG Pic Files (*.jpg);;"
+                                        "PNG Pic Files (*.png);;"
+                                        "All Files (*)")
         if file_name == "":  # 空路径
             return
         else:
@@ -97,22 +105,39 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
             self.lineEdit_load_pic.setText(file_name)
             return
 
+    # 保存嵌入后的图片
     def save_embed_pic(self):
-        # TODO 进行嵌入操作，获取嵌入后图片
+        try:
+            # 选择保存路径
+            file_name, filetype = \
+                QFileDialog.getSaveFileName(None,
+                                            "文件保存",
+                                            self.cwd,
+                                            "BMP Pic Files (*.bmp);;"
+                                            "JPG Pic Files (*.jpg);;"
+                                            "PNG Pic Files (*.png);;"
+                                            "All Files (*)")
+            if file_name == "":  # 空路径
+                self.label_save_pic_flag.setText("嵌入失败")
+                return
+            # 加载各项路径
+            self.path_save_pic = file_name
+            self.path_load_key = self.lineEdit_load_key.text()
+            if self.path_load_key != '':
+                self.data_embedder.load_config(config=self.path_load_key)
+            self.path_load_pic = self.lineEdit_load_pic.text()
 
-        # 选择保存路径
-        file_name, filetype = \
-            QFileDialog.getSaveFileName(None,
-                                        "文件保存",
-                                        self.cwd,  # 起始路径
-                                        "Text Files (*.jpg);;")
-        if file_name == "":  # 空路径
-            self.label_save_pic_flag.setText("嵌入失败")
+            self.label_save_pic_flag.setText("<font color='green'>嵌入成功</font>")
             return
-        else:
-            # TODO 保存嵌入文件
-
-            self.label_save_pic_flag.setText("嵌入成功")
+        except IOError as e1:
+            QMessageBox.critical(None, "错误", str(e1), QMessageBox.Yes | QMessageBox.No)
+            self.label_save_pic_flag.setText("<font color='red'>嵌入失败</font>")
+            return
+        except Exception as e2:
+            QMessageBox.critical(None, "错误", str(e2), QMessageBox.Yes | QMessageBox.No)
+            self.label_save_pic_flag.setText("<font color='red'>嵌入失败</font>")
+            return
+        finally:
             return
 
     # 更新参数显示
