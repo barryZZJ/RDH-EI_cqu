@@ -29,6 +29,7 @@ class encode_thread(QObject):
             self.main_instance.label_U.setText('U = ' + str(self.main_instance.data_embedder.PARAM_U))
             self.main_instance.label_W.setText('W = ' + str(self.main_instance.data_embedder.PARAM_W))
         except DataLongError as e1:
+            # FIXME 异常捕获导致界面崩溃
             QMessageBox.critical(None, "错误", str(e1), QMessageBox.Yes | QMessageBox.No)
         except ValueError as e2:
             QMessageBox.critical(None, "错误", str(e2), QMessageBox.Yes | QMessageBox.No)
@@ -45,7 +46,7 @@ class encrypt_thread(QObject):
         super(encrypt_thread, self).__init__()
         self.main_instance = main_instance
 
-    def do_encrypt(self):
+    def do_embed(self):
         try:
             self.main_instance.pushButton_save_pic.setEnabled(False)
             self.main_instance.label_save_pic_flag.setText("<font color='red'>正在嵌入...</font>")
@@ -54,6 +55,7 @@ class encrypt_thread(QObject):
                 data=self.main_instance.data_bits, img=self.main_instance.img_bits.bytes)
             print("3")
             # 保存图片
+            # FIXME 添加异常处理和标准测试
             embed_pic = bitstream_to_img(BitStream(bytes=embed_pic_bitstream))
             print('1')
             embed_pic.save(self.main_instance.path_save_pic)
@@ -78,6 +80,8 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
         self.setupUi(self)
         self.setWindowTitle("Server")
 
+        self.data_embedder = DataEmbedder()
+
         self.path_load_pic = None
         self.path_save_pic = None
         self.path_load_data = None
@@ -96,7 +100,7 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
 
         # 启动线程
         self.encode_qthread.started.connect(self.encode_thread.do_encode)
-        self.encrypt_qthread.started.connect(self.encrypt_thread.do_encrypt)
+        self.encrypt_qthread.started.connect(self.encrypt_thread.do_embed)
 
         # 结束线程
         self.encode_thread.encode_finish_signal.connect(self.encode_thread_quit)
@@ -115,7 +119,6 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
 
         self.lineEdit_load_pic.textChanged.connect(self.conf_change)
         self.lineEdit_load_data.textChanged.connect(self.conf_change)
-        self.data_embedder = DataEmbedder()
 
         # 配置是否更新与文件匹配
         self.conf_newest_flag = False
