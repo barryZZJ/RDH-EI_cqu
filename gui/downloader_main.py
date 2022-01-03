@@ -11,10 +11,6 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
     def __init__(self):
         super(downloader_main, self).__init__()
         self.cwd = os.getcwd()  # 获取当前程序文件位置
-        self.encode_pic = None
-        self.decrypt_key = None
-        self.embed_key = None
-        self.embed_text = str('')
         self.setupUi(self)
 
         self.child_window = None

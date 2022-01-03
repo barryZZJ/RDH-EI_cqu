@@ -42,7 +42,6 @@ class encrypt_thread(QObject):
         except Exception as exc:
             QMessageBox.critical(None, "错误", str(exc), QMessageBox.Yes | QMessageBox.No)
             self.finish_signal.emit('N')
-            self.terminate()
 
 
 class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
@@ -65,12 +64,11 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
         self.aes_util = AESUtil()
         self.encrypt_thread = encrypt_thread()
         self.thread = QThread()
+        self.encrypt_thread.moveToThread(self.thread)
         self.thread.started.connect(self.encrypt_thread.do_encrypt)
         self.thread.finished.connect(self.thread_quit)
         self.encrypt_thread.start_signal.connect(self.encrypt_start)
         self.encrypt_thread.finish_signal.connect(self.encrypt_finish)
-
-        self.encrypt_thread.moveToThread(self.thread)
 
     # 浏览设定保存密钥路径
     def explore_save_key(self):
@@ -175,6 +173,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
             self.label_encrypt_flag.setText("<font color='green'>保存成功</font>")
         else:
             self.label_encrypt_flag.setText("<font color='red'>保存失败</font>")
+        self.thread_quit()
         return
 
     def thread_quit(self):
