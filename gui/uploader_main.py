@@ -139,7 +139,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
             file_name, filetype = \
                 QFileDialog.getSaveFileName(self,
                                             "文件保存",
-                                            self.cwd + "/untitled",
+                                            self.cwd + "/untitled_encrypt",
                                             "BMP Pic Files (*.bmp);;"
                                             "JPG Pic Files (*.jpg);;"
                                             "PNG Pic Files (*.png);;"

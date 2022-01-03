@@ -22,7 +22,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox_conf">
      <property name="title">
-      <string>当前参数</string>
+      <string>当前参数（需要更新）</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="0">
@@ -49,7 +49,7 @@
             </font>
            </property>
            <property name="text">
-            <string>U = </string>
+            <string>U = ？</string>
            </property>
           </widget>
          </item>
@@ -62,7 +62,7 @@
             </font>
            </property>
            <property name="text">
-            <string>W = </string>
+            <string>W = ？</string>
            </property>
           </widget>
          </item>
@@ -168,10 +168,10 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="lineEdit_load_embed_text"/>
+       <widget class="QLineEdit" name="lineEdit_load_data"/>
       </item>
       <item row="1" column="2">
-       <widget class="QPushButton" name="pushButton_explore_load_embed_text">
+       <widget class="QPushButton" name="pushButton_explore_load_data">
         <property name="text">
          <string>浏览</string>
         </property>
