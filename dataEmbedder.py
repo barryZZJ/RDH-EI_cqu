@@ -302,7 +302,7 @@ class DataEmbedder(DataUtil):
 
 class DataExtractor(DataUtil):
     """信息提取相关操作"""
-    def __init__(self, config: str = None, aesconfig: str = None):
+    def __init__(self, config: str = None, aesutil = None):
         """
         如果config不为空则从配置文件初始化self.key，否则随机初始化self.key。
         如果aesconfig不为空，初始化AESUtil，用于完美解密图片。
@@ -310,27 +310,31 @@ class DataExtractor(DataUtil):
 
         :param config: 配置文件路径字符串
         :param aesconfig: 加解密相关配置文件路径字符串
+
+        修改： 将aesconfig改为直接传入aesutil对象
         """
         if config:
             self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
 
-        if aesconfig:
-            self.aes = AESUtil(aesconfig)
+        if aesutil:
+            self.aes = aesutil
         else:
             self.aes = None
 
-    def load_config(self, config: str = None, aesconfig: str = None):
+    def load_config(self, config: str = None, aesutil = None):
         """
         手动加载config和aesconfig
         *hjk*
 
         :param config: 配置文件路径字符串
         :param aesconfig: 加解密相关配置文件路径字符串
+
+        修改： 将aesconfig改为直接传入aesutil对象
         """
         if config:
             self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
-        if aesconfig:
-            self.aes = AESUtil(aesconfig)
+        if aesutil:
+            self.aes = aesutil
 
     def extract(self, img: bytes) -> bytes:
         """

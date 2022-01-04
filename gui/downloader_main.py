@@ -1,6 +1,7 @@
 import os
 import sys
 import preview
+from aesutil import AESUtil
 from dataEmbedder import DataExtractor
 from imgUil import img_to_bitstream, bitstream_to_img
 from gui import downloader
@@ -41,10 +42,10 @@ class decrypt_thread(QObject):
                 data=self.main_instance.embed_data, img=self.main_instance.img_bits)
             perfect_img = bitstream_to_img(BitStream(bytes=perfect_bits))
             perfect_img.save(self.main_instance.path_save_pic)
-        except IOError as e1:
+        except IOError:
             QMessageBox.critical(None, "错误", "路径错误", QMessageBox.Yes | QMessageBox.No)
-        except Exception as e2:
-            QMessageBox.critical(None, "错误", str(e2), QMessageBox.Yes | QMessageBox.No)
+        except Exception as e:
+            QMessageBox.critical(None, "错误", str(e), QMessageBox.Yes | QMessageBox.No)
         finally:
             self.decrypt_finish_signal.emit()
 
@@ -57,6 +58,7 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
         self.setWindowTitle("Downloader")
 
         self.data_extractor = DataExtractor()
+        self.aes_util = AESUtil()
 
         self.child_window = None
         self.embed_data = bytes()
@@ -94,6 +96,9 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
         self.pushButton_preview_embed_data.clicked.connect(self.preview_embed_data)
         self.pushButton_save_embed_data.clicked.connect(self.save_embed_data)
         self.pushButton_decrypt_save_pic.clicked.connect(self.decrypt_save_pic)
+
+        # 是否可以进行完全解密
+        self.perfect_flag = False
 
     # 设定加载解密密钥路径
     def explore_load_decrypt_key(self):
@@ -138,6 +143,7 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
         else:
             # 将选中路径同步到LineEdit上
             self.lineEdit_load_pic.setText(file_name)
+            self.embed_data = None
             return
 
     # 获取嵌入信息
@@ -167,7 +173,7 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
             QMessageBox.critical(None, "错误", "不存在的路径", QMessageBox.Yes | QMessageBox.No)
             return
         else:
-            if (self.embed_data is None) or (self.embed_data == b''):
+            if self.embed_data is None:
                 QMessageBox.critical(None, "错误", "无信息：尝试点击预览获取", QMessageBox.Yes | QMessageBox.No)
             self.path_save_embed_data = file_name
             self.data_extractor.save_data(data=self.embed_data, file_path=self.path_save_embed_data)
@@ -190,7 +196,14 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
             self.path_save_pic = file_name
             self.path_load_decrypt_key = self.lineEdit_load_decrypt_key.text()
             if self.path_load_decrypt_key is not None:
-                self.data_extractor.load_config(aesconfig=self.path_load_decrypt_key)
+                self.aes_util.load_config(self.path_load_decrypt_key)
+                self.data_extractor.load_config(aesutil=self.aes_util)
+                if self.embed_data is not None:
+                    self.perfect_flag = True
+                else:
+                    self.perfect_flag = False
+            else:
+                QMessageBox.critical(None, "错误", "无密钥", QMessageBox.Yes | QMessageBox.No)
             # 启动解密保存线程
             self.decrypt_qthread.start()
             return
