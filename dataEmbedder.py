@@ -309,9 +309,7 @@ class DataExtractor(DataUtil):
         *yzy*
 
         :param config: 配置文件路径字符串
-        :param aesconfig: 加解密相关配置文件路径字符串
-
-        修改： 将aesconfig改为直接传入aesutil对象
+        :param aesutil: aesutil对象
         """
         if config:
             self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
@@ -327,9 +325,7 @@ class DataExtractor(DataUtil):
         *hjk*
 
         :param config: 配置文件路径字符串
-        :param aesconfig: 加解密相关配置文件路径字符串
-
-        修改： 将aesconfig改为直接传入aesutil对象
+        :param aesutil: aesutil对象
         """
         if config:
             self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
