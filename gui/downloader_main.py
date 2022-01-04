@@ -261,10 +261,6 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
         self.decrypt_qthread.quit()
         return
 
-    def closeEvent(self, event):
-        event.accept()
-        os._exit(0)
-
 
 class Child(QtWidgets.QDialog, preview.Ui_Form):
     def __init__(self):
@@ -280,7 +276,6 @@ class Child(QtWidgets.QDialog, preview.Ui_Form):
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main = downloader_main()
-    main.setWindowFlags(Qt.WindowMinimizeButtonHint|Qt.WindowCloseButtonHint)
     main.show()
     os._exit(app.exec_())
 

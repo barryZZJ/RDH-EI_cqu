@@ -172,14 +172,9 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
     def thread_quit(self):
         self.thread.quit()
 
-    def closeEvent(self, event):
-        event.accept()
-        os._exit(0)
-
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main = uploader_main()
-    main.setWindowFlags(Qt.WindowMinimizeButtonHint|Qt.WindowCloseButtonHint)
     main.show()
     os._exit(app.exec_())

@@ -288,15 +288,10 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
         self.encrypt_qthread.quit()
         return
 
-    def closeEvent(self, event):
-        event.accept()
-        os._exit(0)
-
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main = server_main()
-    main.setWindowFlags(Qt.WindowMinimizeButtonHint|Qt.WindowCloseButtonHint)
     main.show()
     os._exit(app.exec_())
 
