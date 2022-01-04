@@ -157,7 +157,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
             return
 
     def encrypt_start(self):
-        self.label_encrypt_flag.setText("<font color='red'>正在加密...</font>")
+        self.label_encrypt_flag.setText("<font color='yellow'>正在加密...</font>")
         return
 
     def encrypt_finish(self, info):
