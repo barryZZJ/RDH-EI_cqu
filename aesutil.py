@@ -32,7 +32,7 @@ class AESUtil:
             ])
 
     @staticmethod
-    def _read_config(config: str = AES_CONFIG_PATH) -> Tuple[bytes, bytes]:
+    def _read_config(self, config: str = AES_CONFIG_PATH) -> Tuple[bytes, bytes]:
         """
         从配置文件中读取iv和key
         :param config: 配置文件路径字符串
