@@ -56,6 +56,17 @@ class DataUtil:
     def load_config(self, config: str = EMBED_CONFIG_PATH):
         self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
 
+    @staticmethod
+    def read_data(file_path: str) -> bytes:
+        with open(file_path, 'rb') as f:
+            data = f.read()
+        return data
+
+    @staticmethod
+    def save_data(data: bytes, file_path: str):
+        with open(file_path, 'wb') as f:
+            f.write(data)
+
     def optimize_params(self, data_bits: int, img_bits: int):
         """
         为了优化嵌入效果，根据data和图片大小动态调整参数W和U，自动确定最合适的参数组合
@@ -291,7 +302,7 @@ class DataEmbedder(DataUtil):
 
 class DataExtractor(DataUtil):
     """信息提取相关操作"""
-    def __init__(self, config, aesconfig: str = None):
+    def __init__(self, config: str = None, aesconfig: str = None):
         """
         如果config不为空则从配置文件初始化self.key，否则随机初始化self.key。
         如果aesconfig不为空，初始化AESUtil，用于完美解密图片。
@@ -300,12 +311,26 @@ class DataExtractor(DataUtil):
         :param config: 配置文件路径字符串
         :param aesconfig: 加解密相关配置文件路径字符串
         """
-        self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
+        if config:
+            self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
 
         if aesconfig:
             self.aes = AESUtil(aesconfig)
         else:
             self.aes = None
+
+    def load_config(self, config: str = None, aesconfig: str = None):
+        """
+        手动加载config和aesconfig
+        *hjk*
+
+        :param config: 配置文件路径字符串
+        :param aesconfig: 加解密相关配置文件路径字符串
+        """
+        if config:
+            self.key, self.PARAM_U, self.PARAM_W = self._read_config(config)
+        if aesconfig:
+            self.aes = AESUtil(aesconfig)
 
     def extract(self, img: bytes) -> bytes:
         """
