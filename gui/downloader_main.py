@@ -274,5 +274,7 @@ class Child(QtWidgets.QDialog, preview.Ui_Form):
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main = downloader_main()
+    main.setWindowFlags(Qt.WindowMinimizeButtonHint|Qt.WindowCloseButtonHint)
     main.show()
-    sys.exit(app.exec_())
+    os._exit(app.exec_())
+
