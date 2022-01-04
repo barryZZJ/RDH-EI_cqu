@@ -3,7 +3,6 @@ import sys
 
 from PyQt5.QtCore import *
 
-import consts
 from gui import uploader
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5 import QtWidgets
@@ -16,29 +15,20 @@ class encrypt_thread(QObject):
     start_signal = pyqtSignal()
     finish_signal = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, main_instance):
         super(encrypt_thread, self).__init__()
-        self.path_load_pic = None
-        self.aes_util = None
-        self.path_save_pic = None
-
-    def config(self, path_load_pic, aes_util, path_save_pic):
-        self.path_load_pic = path_load_pic
-        self.aes_util = aes_util
-        self.path_save_pic = path_save_pic
+        self.main_instance = main_instance
 
     def do_encrypt(self):
         try:
             self.start_signal.emit()
-            pic_bitstream = img_to_bitstream(self.path_load_pic)
-
+            pic_bitstream = img_to_bitstream(self.main_instance.path_load_pic)
             # 加密
-            pic_encrypted_bitstream = self.aes_util.encrypt(pic_bitstream.bytes)
+            pic_encrypted_bitstream = self.main_instance.aes_util.encrypt(pic_bitstream.bytes)
             # 加密结果转换为图片
             pic_encrypted = bitstream_to_img(BitStream(bytes=pic_encrypted_bitstream))
-            pic_encrypted.save(self.path_save_pic)
+            pic_encrypted.save(self.main_instance.path_save_pic)
             self.finish_signal.emit('Y')
-
         except Exception as exc:
             QMessageBox.critical(None, "错误", str(exc), QMessageBox.Yes | QMessageBox.No)
             self.finish_signal.emit('N')
@@ -62,7 +52,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
         self.pushButton_save_encrypt_pic.clicked.connect(self.save_encrypt_pic)
 
         self.aes_util = AESUtil()
-        self.encrypt_thread = encrypt_thread()
+        self.encrypt_thread = encrypt_thread(self)
         self.thread = QThread()
         self.encrypt_thread.moveToThread(self.thread)
         self.thread.started.connect(self.encrypt_thread.do_encrypt)
@@ -76,7 +66,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
         file_name, filetype = \
             QFileDialog.getSaveFileName(self,
                                         "文件保存",
-                                        self.cwd + "/" + consts.AES_CONFIG_PATH,
+                                        self.cwd + "/aesConf",
                                         "Text Files (*.key);;")
         if file_name == "":  # 空路径
             return
@@ -105,13 +95,14 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
         file_name, filetype = \
             QFileDialog.getOpenFileName(None,
                                         "选取文件",
-                                        self.cwd + "/" + consts.AES_CONFIG_PATH,
+                                        self.cwd,
                                         "Key Files (*.key);;")
         if file_name == "":  # 空路径
             return
         else:
             # 将选中路径同步到LineEdit上
             self.lineEdit_load_key.setText(file_name)
+            self.path_load_key = self.lineEdit_load_key.text()
             return
 
     # 设定加载原始图片的路径
@@ -129,6 +120,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
         else:
             # 将选中路径同步到LineEdit上
             self.lineEdit_load_pic.setText(file_name)
+            self.path_save_pic = self.lineEdit_load_pic.text()
             return
 
     # 加密并保存图片
@@ -147,14 +139,14 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
             self.path_save_pic = file_name
             self.path_load_key = self.lineEdit_load_key.text()
             if self.path_load_key != '':
+                print(self.path_load_key)
                 self.aes_util.load_config(config=self.path_load_key)
             self.path_load_pic = self.lineEdit_load_pic.text()
-            self.encrypt_thread.config(
-                path_save_pic=self.path_save_pic, aes_util=self.aes_util, path_load_pic=self.path_load_pic)
             self.thread.start()
 
             return
         except IOError:
+            QMessageBox.critical(None, "错误", "路径错误", QMessageBox.Yes | QMessageBox.No)
             self.label_encrypt_flag.setText("<font color='red'>保存失败</font>")
             return
         except Exception as e:
