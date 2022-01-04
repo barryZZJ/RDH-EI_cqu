@@ -296,5 +296,7 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main = server_main()
+    main.setWindowFlags(Qt.WindowMinimizeButtonHint|Qt.WindowCloseButtonHint)
     main.show()
-    sys.exit(app.exec_())
+    os._exit(app.exec_())
+
