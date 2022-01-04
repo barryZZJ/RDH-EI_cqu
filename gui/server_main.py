@@ -67,6 +67,8 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
         super(server_main, self).__init__()
         self.cwd = os.getcwd()  # 获取当前程序文件位置
         self.setupUi(self)
+
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
         self.setWindowTitle("Server")
 
         self.data_embedder = DataEmbedder()
@@ -285,6 +287,10 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
         self.pushButton_save_pic.setEnabled(True)
         self.encrypt_qthread.quit()
         return
+
+    def closeEvent(self, event):
+        event.accept()
+        os._exit(0)
 
 
 if __name__ == '__main__':

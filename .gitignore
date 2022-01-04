@@ -132,3 +132,4 @@ dmypy.json
 2.jpg
 *.key
 /result
+/gui/test/

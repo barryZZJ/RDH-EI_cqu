@@ -44,6 +44,7 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
         self.cwd = os.getcwd()  # 获取当前程序文件位置
         self.setupUi(self)
 
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
         self.setWindowTitle("Uploader")
         self.pushButton_explore_save_key.clicked.connect(self.explore_save_key)
         self.pushButton_save_key.clicked.connect(self.save_key)
@@ -170,6 +171,10 @@ class uploader_main(QtWidgets.QDialog, uploader.Ui_Form, QThread):
 
     def thread_quit(self):
         self.thread.quit()
+
+    def closeEvent(self, event):
+        event.accept()
+        os._exit(0)
 
 
 if __name__ == '__main__':

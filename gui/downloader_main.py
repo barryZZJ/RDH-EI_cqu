@@ -72,6 +72,8 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
         super(downloader_main, self).__init__()
         self.cwd = os.getcwd()  # 获取当前程序文件位置
         self.setupUi(self)
+
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
         self.setWindowTitle("Downloader")
 
         self.data_extractor = DataExtractor()
@@ -258,6 +260,10 @@ class downloader_main(QtWidgets.QDialog, downloader.Ui_Form, QThread):
     def decrypt_thread_quit(self):
         self.decrypt_qthread.quit()
         return
+
+    def closeEvent(self, event):
+        event.accept()
+        os._exit(0)
 
 
 class Child(QtWidgets.QDialog, preview.Ui_Form):
