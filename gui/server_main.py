@@ -11,66 +11,55 @@ from imgUil import img_to_bitstream, bitstream_to_img
 from bitstring import BitStream
 
 
-class encode_thread(QObject):
-    encode_finish_signal = pyqtSignal()
+class encode_worker(QObject):
+    encode_start_signal = pyqtSignal()
+    encode_finish_signal = pyqtSignal(str)
 
     def __init__(self, main_instance):
-        super(encode_thread, self).__init__()
+        super(encode_worker, self).__init__()
         self.main_instance = main_instance
+        self.data_bits = None
+        self.img_bits = None
 
     def do_encode(self):
         try:
-            self.main_instance.pushButton_calculate.setText("正在计算...")
-            self.main_instance.pushButton_calculate.setEnabled(False)
-            self.main_instance.data_bits = self.main_instance.data_embedder.read_data(self.main_instance.path_load_data)
-            self.main_instance.img_bits = img_to_bitstream(self.main_instance.path_load_pic)
-            self.main_instance.data_embedder.optimize_params(
-                data_bits=len(self.main_instance.data_bits) * 8, img_bits=len(self.main_instance.img_bits) * 8)
-            self.main_instance.label_U.setText('U = ' + str(self.main_instance.data_embedder.PARAM_U))
-            self.main_instance.label_W.setText('W = ' + str(self.main_instance.data_embedder.PARAM_W))
-        except DataLongError as e1:
-            # FIXME 异常捕获导致界面崩溃
-            QMessageBox.critical(None, "错误", str(e1), QMessageBox.Yes | QMessageBox.No)
-        except ValueError as e2:
-            QMessageBox.critical(None, "错误", str(e2), QMessageBox.Yes | QMessageBox.No)
-        except Exception as e3:
-            QMessageBox.critical(None, "错误", str(e3), QMessageBox.Yes | QMessageBox.No)
-        finally:
-            self.encode_finish_signal.emit()
+            self.encode_start_signal.emit()
+            self.data_bits = self.main_instance.data_embedder.read_data(
+                self.main_instance.path_load_data)
+            self.img_bits = img_to_bitstream(self.main_instance.path_load_pic)
+            self.encode_finish_signal.emit('Y')
+        except Exception as e:
+            QMessageBox.critical(None, "错误", str(e), QMessageBox.Yes | QMessageBox.No)
+            self.encode_finish_signal.emit('N')
+
+    def get_data(self):
+        return [self.data_bits, self.img_bits]
 
 
-class encrypt_thread(QObject):
-    encrypt_finish_signal = pyqtSignal()
+class encrypt_worker(QObject):
+    encrypt_start_signal = pyqtSignal()
+    encrypt_finish_signal = pyqtSignal(str)
 
     def __init__(self, main_instance):
-        super(encrypt_thread, self).__init__()
+        super(encrypt_worker, self).__init__()
         self.main_instance = main_instance
 
     def do_embed(self):
         try:
-            self.main_instance.pushButton_save_pic.setEnabled(False)
-            self.main_instance.label_save_pic_flag.setText("<font color='red'>正在嵌入...</font>")
+            self.encrypt_start_signal.emit()
             # 嵌入
-            embed_pic_bitstream = self.main_instance.data_embedder.embed(
+            embed_pic_bytes = self.main_instance.data_embedder.embed(
                 data=self.main_instance.data_bits, img=self.main_instance.img_bits.bytes)
-            print("3")
             # 保存图片
-            # FIXME 添加异常处理和标准测试
-            embed_pic = bitstream_to_img(BitStream(bytes=embed_pic_bitstream))
-            print('1')
+            embed_pic = bitstream_to_img(BitStream(bytes=embed_pic_bytes))
             embed_pic.save(self.main_instance.path_save_pic)
-            print('4')
-            self.main_instance.label_save_pic_flag.setText("<font color='green'>保存成功</font>")
+            self.encrypt_finish_signal.emit('Y')
         except IOError as e1:
             QMessageBox.critical(None, "错误", str(e1), QMessageBox.Yes | QMessageBox.No)
-            self.main_instance.label_save_pic_flag.setText("<font color='red'>保存失败</font>")
-
+            self.encrypt_finish_signal.emit('N')
         except Exception as e2:
             QMessageBox.critical(None, "错误", str(e2), QMessageBox.Yes | QMessageBox.No)
-            self.main_instance.label_save_pic_flag.setText("<font color='red'>保存失败</font>")
-        finally:
-            print('5')
-            self.encrypt_finish_signal.emit()
+            self.encrypt_finish_signal.emit('N')
 
 
 class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
@@ -93,18 +82,20 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
         # 线程定义
         self.encode_qthread = QThread()
         self.encrypt_qthread = QThread()
-        self.encode_thread = encode_thread(self)
-        self.encrypt_thread = encrypt_thread(self)
-        self.encode_thread.moveToThread(self.encode_qthread)
-        self.encrypt_thread.moveToThread(self.encrypt_qthread)
+        self.encode_worker = encode_worker(self)
+        self.encrypt_worker = encrypt_worker(self)
+        self.encode_worker.moveToThread(self.encode_qthread)
+        self.encrypt_worker.moveToThread(self.encrypt_qthread)
 
         # 启动线程
-        self.encode_qthread.started.connect(self.encode_thread.do_encode)
-        self.encrypt_qthread.started.connect(self.encrypt_thread.do_embed)
+        self.encode_qthread.started.connect(self.encode_worker.do_encode)
+        self.encrypt_qthread.started.connect(self.encrypt_worker.do_embed)
+        self.encode_worker.encode_start_signal.connect(self.encode_thread_start)
+        self.encrypt_worker.encrypt_start_signal.connect(self.encrypt_thread_start)
 
         # 结束线程
-        self.encode_thread.encode_finish_signal.connect(self.encode_thread_quit)
-        self.encrypt_thread.encrypt_finish_signal.connect(self.encrypt_thread_quit)
+        self.encode_worker.encode_finish_signal.connect(self.encode_thread_finish)
+        self.encrypt_worker.encrypt_finish_signal.connect(self.encrypt_thread_finish)
         self.encode_qthread.finished.connect(self.encode_thread_quit)
         self.encrypt_qthread.finished.connect(self.encrypt_thread_quit)
 
@@ -123,12 +114,15 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
         # 配置是否更新与文件匹配
         self.conf_newest_flag = False
 
+        self.label_U.setText("U = " + str(self.data_embedder.PARAM_U))
+        self.label_W.setText("W = " + str(self.data_embedder.PARAM_W))
+
     # 设定密钥和参数保存路径
     def explore_save_conf(self):
         file_name, filetype = \
             QFileDialog.getSaveFileName(None,
                                         "文件保存",
-                                        self.cwd,
+                                        self.cwd + "/embedConf",
                                         "Text Files (*.key);;")
         if file_name == "":  # 空路径
             return
@@ -164,6 +158,7 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
         else:
             # 将选中路径同步到LineEdit上
             self.lineEdit_load_conf.setText(file_name)
+            self.path_load_conf = self.lineEdit_load_conf.text()
             return
 
     # 设定加载嵌入文本的路径
@@ -178,6 +173,7 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
         else:
             # 将选中路径同步到LineEdit上
             self.lineEdit_load_data.setText(file_name)
+            self.path_load_data = self.lineEdit_load_data.text()
             return
 
     # 设定加载图片的路径
@@ -195,6 +191,7 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
         else:
             # 将选中路径同步到LineEdit上
             self.lineEdit_load_pic.setText(file_name)
+            self.path_load_pic = self.lineEdit_load_pic.text()
             return
 
     # 保存嵌入后的图片
@@ -240,7 +237,42 @@ class server_main(QtWidgets.QDialog, server.Ui_Form, QThread):
             self.encode_qthread.start()
         return
 
-    # 线程结束退出
+    # 线程开始
+    def encode_thread_start(self):
+        self.pushButton_calculate.setText("正在计算...")
+        self.pushButton_calculate.setEnabled(False)
+
+    def encrypt_thread_start(self):
+        self.pushButton_save_pic.setEnabled(False)
+        self.label_save_pic_flag.setText("<font color='red'>正在嵌入...</font>")
+
+    # 线程结束
+    def encode_thread_finish(self, info):
+        if info == 'Y':
+            try:
+                self.data_bits, self.img_bits = self.encode_worker.get_data()
+                self.data_embedder.optimize_params(
+                    data_bits=len(self.data_bits) * 8, img_bits=len(self.img_bits))
+                self.label_U.setText('U = ' + str(self.data_embedder.PARAM_U))
+                self.label_W.setText('W = ' + str(self.data_embedder.PARAM_W))
+            except DataLongError as e1:
+                QMessageBox.critical(None, "错误", str(e1), QMessageBox.Yes | QMessageBox.No)
+            except ValueError as e2:
+                QMessageBox.critical(None, "错误", str(e2), QMessageBox.Yes | QMessageBox.No)
+            except Exception as e3:
+                QMessageBox.critical(None, "错误", str(e3), QMessageBox.Yes | QMessageBox.No)
+        else:
+            QMessageBox.critical(None, "错误", "计算失败", QMessageBox.Yes | QMessageBox.No)
+        self.encode_thread_quit()
+
+    def encrypt_thread_finish(self, info):
+        if info == 'Y':
+            self.label_save_pic_flag.setText("<font color='green'>保存成功</font>")
+        else:
+            self.label_save_pic_flag.setText("<font color='red'>保存失败</font>")
+        self.encrypt_thread_quit()
+
+    # 线程退出
     def encode_thread_quit(self):
         self.pushButton_calculate.setText("自动计算参数")
         self.pushButton_calculate.setEnabled(True)
