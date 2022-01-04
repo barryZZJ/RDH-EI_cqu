@@ -2,6 +2,7 @@
 AES_CONFIG_PATH = "aesConf.key"  # 加密相关配置文件默认存储路径
 EMBED_CONFIG_PATH = "embedConf.key"  # 信息嵌入相关配置文件默认存储路径
 PIC_512_PATH = "pics/lena512.bmp"  # 测试用图片路径, 512x512
+PIC_256_PATH = "pics/lena256.bmp"  # 测试用图片路径, 256x256
 PIC_128_PATH = "pics/lena128.bmp"  # 测试用图片路径, 128x128
 PIC_8_PATH = "pics/lena8.bmp"  # 测试用图片路径, 8x8
 PIC_8_2_PATH = "pics/lena8_2.bmp"  # 测试用图片路径, 8x8
