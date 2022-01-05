@@ -121,7 +121,7 @@ def _from_blocks(blocks: List[Image.Image]) -> Image.Image:
             to_image.paste(blocks[i], (n * 8, m * 8))
     return to_image
 
-def evaluate_psnr(decrypted: Image.Image, original: Image.Image):
+def evaluate_psnr(decrypted: Image.Image, original: Image.Image) -> float:
     """
     计算解密后的图片与原图的PSNR值，评估解密图片的效果
     """
