@@ -170,7 +170,6 @@ class DataUtil:
         i = np.identity(self.PARAM_W, dtype=int)
         # 再生成一个嵌入密钥控制的w*(64u-w)的二进制伪随机矩阵
         np.random.seed(int.from_bytes(self.key, byteorder='big', signed=False) % (2 ** 32 - 1))
-        # 测试用np.random.seed(int.from_bytes(EMBED_KEY_DEBUG, byteorder='big', signed=False) % (2 ** 32 - 1))
         q = np.random.randint(0, 2, size=(self.PARAM_W, (64 * self.PARAM_U - self.PARAM_W)))
         # 把i和q矩阵合并，成为一个w*64u的矩阵
         h = np.append(i, q, axis=1)
@@ -180,7 +179,6 @@ class DataUtil:
     def _dot(bits: BitStream, matrix: NDArray[int]) -> BitStream:
         """
         比特流与矩阵点乘。
-        FIXME: 目前为把bits转换为整数，相乘后转换回比特流。感觉效率最高的是生成Bits矩阵，比特之间直接相乘，但得手动实现。
         """
         bits = np.asarray(list(bits.bin), dtype=int)
         res = np.dot(bits, matrix)
@@ -390,7 +388,7 @@ class DataExtractor(DataUtil):
         for k in range(0, L-1 + 1):
             blocks_k = [None] * (2**self.PARAM_W)  # type: List[List[Image.Image]] # shape: (2^w, u)
             # blocks_k[l] = 第k组中，第l种情况的u个块
-            e_k = e_grouped[k].copy()  # FIXME 能否删除copy
+            e_k = e_grouped[k].copy()
             for l in range(2**self.PARAM_W):
                 t_l = BitStream(uint=l, length=self.PARAM_W)
                 r_k = datas[k] ^ t_l
